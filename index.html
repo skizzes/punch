@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Punch in the Trenches ⚔️</title>
+  <meta name="description"
+    content="Punch in the Trenches – survive the crypto war. Dodge red candles, collect BTC/ETH/SOL, WAGMI!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" tabindex="0"></canvas>
+  </div>
+
+
+  <!-- Name-entry modal (shown after game over, before score is saved) -->
+  <div id="name-modal" class="name-modal hidden">
+    <div class="name-card">
+      <div class="name-card-header">⚔️ TRENCH WALLET ⚔️</div>
+      <div class="name-card-score" id="modal-score">$00000</div>
+      <p class="name-card-label">ENTER YOUR CALLSIGN</p>
+      <input id="name-input" type="text" maxlength="16" placeholder="Degen Soldier..." autocomplete="off"
+        spellcheck="false" />
+      <div class="name-card-btns">
+        <button id="name-submit">⚔️ ENTER RANKINGS</button>
+        <button id="name-skip">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard toggle (hidden in embed mode via JS) -->
+  <div id="lb-panel" class="lb-panel hidden">
+    <h3>🏆 Local Leaderboard</h3>
+    <ol id="lb-list"></ol>
+    <button id="lb-clear">Clear</button>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+{
+    "name": "punch-in-the-trenches",
+    "version": "1.0.0",
+    "scripts": {
+        "start": "node server/index.js",
+        "dev": "npx serve . -p 3000 --no-clipboard"
+    },
+    "dependencies": {
+        "cors": "^2.8.6",
+        "express": "^5.2.1"
+    }
+}
