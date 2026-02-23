@@ -114,30 +114,11 @@
                     <p>Every coin builds streak. Reach 15+ consecutive coins to enter TRENCH MODE.</p>
                 </div>
                 <!-- Obstacles Showcase -->
-                <div class="htp-card-premium wide-card">
-                    <h3>⚠️ DEADLY OBSTACLES</h3>
-                    <div class="obs-flex">
-                        <div class="obs-item-p">
-                            <div class="shape shape-candle-g"></div>GREEN CANDLE
-                        </div>
-                        <div class="obs-item-p">
-                            <div class="shape shape-candle-r"></div>RED CANDLE
-                        </div>
-                        <div class="obs-item-p">
-                            <div class="shape shape-candle-t"></div>TALL CANDLE
-                        </div>
-                        <div class="obs-item-p">
-                            <div class="shape shape-duck"></div>DUCK BAR
-                        </div>
-                        <div class="obs-item-p">
-                            <div class="shape shape-crash"></div>CRASH BAR
-                        </div>
-                        <div class="obs-item-p">
-                            <div class="shape shape-spike">
-                                <div class="shape-spike-mid"></div>
-                            </div>SPIKE CLUSTER
-                        </div>
-                    </div>
+                <div class="htp-card-premium wide-card" style="grid-column: 1 / -1;">
+                    <h3 class="mb-4 text-center">⚠️ DEADLY OBSTACLES</h3>
+                    <canvas id="obs-canvas" width="800" height="240"
+                        class="w-full rounded-xl border border-white/10 shadow-2xl mt-4"
+                        style="image-rendering: pixelated; background: #000; display: block; max-width: 100%;"></canvas>
                 </div>
             </div>
         </div>
