@@ -113,7 +113,7 @@ createParticles();
 
 // ── Scroll animations ─────────────────────────────────────────────────────────
 function initScrollAnim() {
-    const els = document.querySelectorAll('.htp-card,.boost-card,.tier-card,.obs-item,.biome,.coin-ref');
+    const els = document.querySelectorAll('.htp-card-premium, .boost-card-cyber, .tier-card-premium, .obs-item-p');
     els.forEach(el => el.classList.add('fade-in'));
     const obs = new IntersectionObserver((entries) => {
         entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
