@@ -1,52 +1,96 @@
-// server/index.js – Optional leaderboard server (Node.js + Express)
-// Run: npm install express cors && node server/index.js
-// GET  /api/leaderboard  -> top 10 entries
-// POST /api/score        -> submit { name, score, time, plush, streak }
-
+// server/index.js – Punch leaderboard server (Supabase persistence)
+// ─────────────────────────────────────────────────────────────────
+// ENV VARS required:
+//   SUPABASE_URL  = https://xxxx.supabase.co
+//   SUPABASE_KEY  = your anon/service_role key
+// Optional:
+//   PORT          = 3001 (default)
+// ─────────────────────────────────────────────────────────────────
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const DB = path.join(__dirname, 'scores.json');
 
 app.use(cors());
 app.use(express.json());
 
-// ── In-memory store (also persists to scores.json) ───────────────────────
-let scores = [];
-if (fs.existsSync(DB)) {
-    try { scores = JSON.parse(fs.readFileSync(DB, 'utf8')); } catch { }
+// ── Supabase client (lightweight REST calls via fetch) ────────────────────────
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+function sbHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Prefer': 'return=representation',
+    };
 }
 
-function persist() {
-    fs.writeFileSync(DB, JSON.stringify(scores, null, 2));
+async function getTopScores(limit = 25) {
+    if (!SUPABASE_URL) return [];
+    const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/scores?order=score.desc&limit=${limit}`,
+        { headers: sbHeaders() }
+    );
+    return res.ok ? await res.json() : [];
 }
 
-// ── Routes ────────────────────────────────────────────────────────────────
-app.get('/api/leaderboard', (req, res) => {
-    res.json(scores.slice(0, 25));
-});
-
-app.post('/api/score', (req, res) => {
-    const { name = 'Anonymous', score, time, plush, streak } = req.body;
-    if (typeof score !== 'number') return res.status(400).json({ error: 'score required' });
-
-    scores.push({
-        name: String(name).slice(0, 20),
-        score: Math.floor(score),
-        time: Math.floor(time || 0),
-        plush: Math.floor(plush || 0),
-        streak: Math.floor(streak || 0),
-        date: new Date().toISOString(),
+async function insertScore(entry) {
+    if (!SUPABASE_URL) return null;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+        method: 'POST',
+        headers: sbHeaders(),
+        body: JSON.stringify(entry),
     });
-    scores.sort((a, b) => b.score - a.score);
-    scores = scores.slice(0, 500);
-    persist();
-    const rank = scores.findIndex(s => s.date === entry.date) + 1;
-    res.json({ ok: true, rank });
+    return res.ok ? (await res.json())[0] : null;
+}
+
+async function getRank(id) {
+    if (!SUPABASE_URL) return null;
+    // Count how many scores are strictly higher
+    const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/scores?select=count&score=gt.0`,
+        { headers: { ...sbHeaders(), 'Prefer': 'count=exact', 'Range': '0-0' } }
+    );
+    // Simpler: fetch top 500 and find position
+    const all = await getTopScores(500);
+    const idx = all.findIndex(s => s.id === id);
+    return idx >= 0 ? idx + 1 : null;
+}
+
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const scores = await getTopScores(25);
+        res.json(scores);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
+
+app.post('/api/score', async (req, res) => {
+    try {
+        const { name, score, time, plush, streak } = req.body;
+        if (!name || score == null) return res.status(400).json({ error: 'name and score required' });
+
+        const entry = {
+            name: String(name).trim().slice(0, 16) || 'Anonymous',
+            score: Math.floor(Number(score)),
+            time: Math.floor(Number(time) || 0),
+            plush: Math.floor(Number(plush) || 0),
+            streak: Math.floor(Number(streak) || 0),
+        };
+
+        const inserted = await insertScore(entry);
+        const rank = inserted ? await getRank(inserted.id) : null;
+        res.json({ ok: true, rank });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/health', (_, res) => res.json({ ok: true, db: !!SUPABASE_URL }));
 
 app.listen(PORT, () => console.log(`Punch Run leaderboard server on :${PORT}`));
