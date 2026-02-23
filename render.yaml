@@ -1,11 +1,36 @@
 services:
+  # ── Leaderboard API + Landing page server ────────────────────
   - type: web
     name: punch-leaderboard
     env: node
-    rootDir: server
-    buildCommand: npm install
-    startCommand: node index.js
+    buildCommand: cd server && npm install
+    startCommand: node server/index.js
     plan: free
     envVars:
       - key: PORT
         value: 10000
+
+  # ── Landing page → punchinthetrenches.fun ──────────────────
+  - type: web
+    name: punch-landing
+    env: static
+    rootDir: landing
+    staticPublishPath: .
+    buildCommand: echo "no build needed"
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── Game → play.punchinthetrenches.fun ────────────────────
+  - type: web
+    name: punch-game
+    env: static
+    staticPublishPath: .
+    buildCommand: echo "no build needed"
+    plan: free
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

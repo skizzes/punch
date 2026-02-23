@@ -1,7 +1,5 @@
 // src/main.js – Entry point
-// ─── Configure GAME_URL here ──────────────────────────────────────────────
-const GAME_URL = 'http://localhost';
-// ─────────────────────────────────────────────────────────────────────────
+const GAME_URL = window.PUNCH_GAME_URL || 'https://play.punchinthetrenches.fun';
 
 import { GameEngine } from './game.js';
 import { startFaviconDance } from './favicon.js';
