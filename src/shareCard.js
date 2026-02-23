@@ -2,15 +2,15 @@
 
 /**
  * Renders an 800×300 share card onto an offscreen canvas using the game's
- * current biome colors, score data, and branding, then shows a modal with
- * Download + Tweet buttons.
+ * current biome colors, coin data, and branding, then shows a modal with
+ * Tweet, Download, Copy Image, and Close buttons.
  *
  * @param {object} engine  GameEngine instance
  * @param {object} data    { score, survivalTime, plushCount, bestStreak, biomeName }
  */
 export function showShareCard(engine, data) {
     const card = _renderCard(engine, data);
-    _showModal(card, data);
+    _showModal(card, data, engine);
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -26,6 +26,10 @@ function _renderCard(engine, { score, survivalTime, plushCount, bestStreak, biom
     grad.addColorStop(0, b.skyTop);
     grad.addColorStop(1, b.skyBot || b.skyTop);
     ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Biome tint overlay (color pulled from groundLine for identity)
+    ctx.fillStyle = (b.groundLine || '#22c55e') + '18';
     ctx.fillRect(0, 0, W, H);
 
     // Subtle vignette
@@ -57,7 +61,7 @@ function _renderCard(engine, { score, survivalTime, plushCount, bestStreak, biom
     ctx.fillStyle = '#ffcc44';
     ctx.fillText('$PUNCH  •  SOL', 36, 100);
 
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '10px monospace';
     ctx.fillText(biomeName || '', 36, 120);
     ctx.shadowBlur = 0;
@@ -93,6 +97,27 @@ function _renderCard(engine, { score, survivalTime, plushCount, bestStreak, biom
         ctx.font = 'bold 11px monospace';
     });
 
+    // Coin icon breakdown (visual circles)
+    const gameData = engine._gameOverData;
+    const coinItems = [
+        { icon: '₿', color: '#F7931A', rim: '#c4700d', count: gameData?.btc || 0 },
+        { icon: '◆', color: '#627EEA', rim: '#4059c2', count: gameData?.eth || 0 },
+        { icon: 'S', color: '#9945FF', rim: '#6a24cc', count: gameData?.sol || 0 },
+    ];
+    coinItems.forEach((c, i) => {
+        if (c.count === 0) return;
+        const cx2 = 282 + i * 90;
+        const cy2 = 210;
+        ctx.fillStyle = c.rim;
+        ctx.beginPath(); ctx.arc(cx2, cy2, 13, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = c.color;
+        ctx.beginPath(); ctx.arc(cx2, cy2, 11, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center';
+        ctx.fillText(c.icon, cx2, cy2 + 1);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '8px monospace';
+        ctx.fillText(`×${c.count}`, cx2, cy2 + 20);
+    });
+
     // ── Right panel: CTA ──────────────────────────────────────────────────────
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
@@ -121,7 +146,31 @@ function _renderCard(engine, { score, survivalTime, plushCount, bestStreak, biom
     ctx.font = 'bold 11px monospace';
     ctx.fillText('pump.fun/$PUNCH', 670, 198);
 
+    // ── Pixel art logo stamp (bottom-right corner) ────────────────────────────
+    _drawPixelLogo(ctx, W - 28, H - 28);
+
     return cv;
+}
+
+/** Tiny 5×5 pixel "⚔️" stamp in corner */
+function _drawPixelLogo(ctx, cx, cy) {
+    const s = 4; // pixel size
+    const pixels = [
+        // Crossed swords pixel art (5×5)
+        [1, 0, 0, 0, 1],
+        [0, 1, 0, 1, 0],
+        [0, 0, 1, 0, 0],
+        [0, 1, 0, 1, 0],
+        [1, 0, 0, 0, 1],
+    ];
+    ctx.fillStyle = 'rgba(255,220,50,0.7)';
+    for (let r = 0; r < pixels.length; r++) {
+        for (let c = 0; c < pixels[r].length; c++) {
+            if (pixels[r][c]) {
+                ctx.fillRect(cx + c * s - pixels[0].length * s / 2, cy + r * s - pixels.length * s / 2, s - 1, s - 1);
+            }
+        }
+    }
 }
 
 function _roundRect(ctx, x, y, w, h, r) {
@@ -139,16 +188,18 @@ function _roundRect(ctx, x, y, w, h, r) {
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
-function _showModal(cardCanvas, { score }) {
-    // Remove existing modal if any
+function _showModal(cardCanvas, { score }, engine) {
     document.getElementById('share-modal')?.remove();
 
     const dataURL = cardCanvas.toDataURL('image/png');
+    const d = engine?._gameOverData;
+    const biome = d?.biome || '';
+    const pu = d?.powerup ? { bull: '🐂 Bull', pump: '💊 PUMP', bear: '🐻 Bear', airdrop: '🪂 Airdrop', shield: '🪖 Shield', magnet: '🧲 Magnet', slowtime: '⏰ SlowTime' }[d.powerup] || '' : '';
 
     const overlay = document.createElement('div');
     overlay.id = 'share-modal';
     overlay.style.cssText = `
-        position:fixed;inset:0;background:rgba(0,0,0,0.82);
+        position:fixed;inset:0;background:rgba(0,0,0,0.85);
         display:flex;flex-direction:column;align-items:center;justify-content:center;
         z-index:10000;font-family:monospace;
     `;
@@ -158,22 +209,22 @@ function _showModal(cardCanvas, { score }) {
     img.style.cssText = 'max-width:90vw;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.7);';
 
     const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;gap:12px;margin-top:16px;';
+    btnRow.style.cssText = 'display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;justify-content:center;';
 
-    const tweetText = encodeURIComponent(
-        `🐂 I scored ${Math.floor(score)} pts in PUNCH IN THE TRENCHES!\nCan you beat me?\n\n$PUNCH #Solana #crypto\n▶️ play.punchonsol.com`
+    const extras = [pu, biome].filter(Boolean).join(' · ');
+    const tweetTxt = encodeURIComponent(
+        `⚔️ I scored ${Math.floor(score)} pts in PUNCH IN THE TRENCHES!${extras ? '\n' + extras : ''}\nCan you beat me?\n\n$PUNCH #Solana #crypto\n▶️ play.punchonsol.com`
     );
 
     const btnStyle = (bg) => `
-        padding:10px 24px;border:none;border-radius:6px;cursor:pointer;
-        font:bold 13px monospace;background:${bg};color:#fff;
-        transition:opacity .15s;
+        padding:9px 20px;border:none;border-radius:6px;cursor:pointer;
+        font:bold 12px monospace;background:${bg};color:#fff;transition:opacity .15s;
     `;
 
     const tweetBtn = document.createElement('button');
     tweetBtn.textContent = '🐦 SHARE ON X';
     tweetBtn.style.cssText = btnStyle('#1d9bf0');
-    tweetBtn.onclick = () => window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+    tweetBtn.onclick = () => window.open(`https://twitter.com/intent/tweet?text=${tweetTxt}`, '_blank');
 
     const dlBtn = document.createElement('button');
     dlBtn.textContent = '⬇️ DOWNLOAD';
@@ -181,8 +232,24 @@ function _showModal(cardCanvas, { score }) {
     dlBtn.onclick = () => {
         const a = document.createElement('a');
         a.download = `punch-score-${Math.floor(score)}.png`;
-        a.href = dataURL;
-        a.click();
+        a.href = dataURL; a.click();
+    };
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '📋 COPY IMAGE';
+    copyBtn.style.cssText = btnStyle('#8b5cf6');
+    copyBtn.onclick = async () => {
+        try {
+            const blob = await new Promise(res => cardCanvas.toBlob(res, 'image/png'));
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            copyBtn.textContent = '✅ COPIED!';
+            setTimeout(() => { copyBtn.textContent = '📋 COPY IMAGE'; }, 1800);
+        } catch {
+            // Fallback: copy URL text
+            navigator.clipboard?.writeText(`PUNCH IN THE TRENCHES  $${Math.floor(score)}  play.punchonsol.com`);
+            copyBtn.textContent = '✅ TEXT COPIED';
+            setTimeout(() => { copyBtn.textContent = '📋 COPY IMAGE'; }, 1800);
+        }
     };
 
     const closeBtn = document.createElement('button');
@@ -190,10 +257,9 @@ function _showModal(cardCanvas, { score }) {
     closeBtn.style.cssText = btnStyle('#555');
     closeBtn.onclick = () => overlay.remove();
 
-    btnRow.append(tweetBtn, dlBtn, closeBtn);
+    btnRow.append(tweetBtn, dlBtn, copyBtn, closeBtn);
     overlay.append(img, btnRow);
     document.body.appendChild(overlay);
 
-    // Close on backdrop click
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }

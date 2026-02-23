@@ -4,6 +4,7 @@
 
 const GRAVITY = 1500;
 const JUMP_VEL = -640;
+const AIR_JUMPS = 1; // one double-jump allowed
 
 // Display size on canvas
 const DRAW_W = 56;
@@ -30,11 +31,9 @@ const S = [
 
 // Run animation: use row 1 frames (indices 0-4)
 const RUN_FRAMES = [0, 1, 2, 3, 4];
-
 // Jump: arms-open pose
 const JUMP_IDX = 7;
-
-// Duck: uses row 2 poses (different tail/body positions than run)
+// Duck: uses row 2 poses
 const DUCK_FRAMES = [5, 6, 8, 9];
 
 // ─── Sprite sheet loader with background removal ───────────────────────────
@@ -92,13 +91,22 @@ export class Player {
         this.ducking = false;
         this.runFrame = 0;
         this.runTimer = 0;
+        this.airJumps = 0;      // double-jump counter
+        // death flash
+        this.deathFlash = false;
+        this.deathFlashTimer = 0;
     }
 
     jump() {
         if (this.grounded) {
             this.vy = JUMP_VEL;
             this.grounded = false;
+            this.airJumps = 0;
             if (this.ducking) this._unduck();
+        } else if (this.airJumps < AIR_JUMPS) {
+            // Double jump – slightly weaker
+            this.vy = JUMP_VEL * 0.82;
+            this.airJumps++;
         }
     }
 
@@ -119,8 +127,16 @@ export class Player {
         if (this.grounded) this.y = this.groundY - DRAW_H;
     }
 
+    /** Called by game.js when the player hits an obstacle (for death animation) */
+    triggerDeathFlash() {
+        this.deathFlash = true;
+        this.deathFlashTimer = 0.35; // seconds
+    }
+
     update(dt, keys) {
-        if ((keys['Space'] || keys['ArrowUp']) && this.grounded && !this.ducking) this.jump();
+        if ((keys['Space'] || keys['ArrowUp']) && !this.ducking) {
+            // Only consume key once per press - game.js handles this via _jumpPressed flag
+        }
         if (keys['ArrowDown'] && this.grounded) this.duck();
         else if (!keys['ArrowDown'] && this.ducking) this._unduck();
 
@@ -128,7 +144,12 @@ export class Player {
             this.vy += GRAVITY * dt;
             this.y += this.vy * dt;
             const land = this.groundY - this.h;
-            if (this.y >= land) { this.y = land; this.vy = 0; this.grounded = true; }
+            if (this.y >= land) {
+                this.y = land;
+                this.vy = 0;
+                this.grounded = true;
+                this.airJumps = 0;
+            }
         }
 
         if (this.grounded) {
@@ -137,6 +158,12 @@ export class Player {
                 this.runTimer = 0;
                 this.runFrame = (this.runFrame + 1) % RUN_FRAMES.length;
             }
+        }
+
+        // Death flash timer
+        if (this.deathFlashTimer > 0) {
+            this.deathFlashTimer -= dt;
+            if (this.deathFlashTimer <= 0) this.deathFlash = false;
         }
     }
 
@@ -163,7 +190,14 @@ export class Player {
         const x = ~~this.x;
         const y = ~~this.y;
 
-        // Draw sprite first
+        // Death flash: overlay red tint
+        if (this.deathFlash) {
+            const alpha = 0.5 + 0.5 * Math.sin(this.deathFlashTimer * 40);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+        }
+
+        // Draw sprite
         let idx;
         if (this.ducking) {
             idx = DUCK_FRAMES[this.runFrame % DUCK_FRAMES.length];
@@ -176,23 +210,26 @@ export class Player {
             this._drawSprite(ctx, idx, x, y, this.w, this.h);
         }
 
+        if (this.deathFlash) {
+            // Red flash layer on top of sprite
+            ctx.fillStyle = `rgba(255,50,50,${0.45 + 0.45 * Math.sin(this.deathFlashTimer * 40)})`;
+            ctx.fillRect(x, y, this.w, this.h);
+            ctx.restore();
+        }
+
         // Helmet IN FRONT of sprite (drawn after)
         if (shieldActive) {
             const hcx = x + this.w * 0.55;
             ctx.save();
-            // Helmet dome
             ctx.fillStyle = '#4a5d23';
             ctx.beginPath();
             ctx.ellipse(hcx, y + 3, 18, 12, 0, Math.PI, 0);
             ctx.rect(hcx - 18, y + 3, 36, 6);
             ctx.fill();
-            // Darker rim
             ctx.fillStyle = '#3b4a1f';
             ctx.fillRect(hcx - 20, y + 7, 40, 3);
-            // Top ridge
             ctx.fillStyle = '#6b8e23';
             ctx.fillRect(hcx - 3, y - 8, 6, 4);
-            // Gold star
             ctx.fillStyle = '#ffd700';
             ctx.fillRect(hcx - 2, y - 1, 4, 4);
             ctx.restore();

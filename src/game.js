@@ -82,6 +82,8 @@ export class GameEngine {
         // Per-coin tracking
         this.btcCount = 0; this.ethCount = 0; this.solCount = 0;
         this.btcValue = 0; this.ethValue = 0; this.solValue = 0;
+        this._bestPowerup = null; // track best power-up used this run
+        this._jumpPressed = false; // edge-detect for double jump
         this.player.reset();
         this.spawn.reset();
         this.powerups.reset();
@@ -166,7 +168,7 @@ export class GameEngine {
             if (overlaps(ph, this.spawn.obsHB(obs))) {
                 if (this.powerups.shieldActive) {
                     this.powerups.breakShield();
-                    // Remove this obstacle
+                    this.streak = 0; // BUG FIX: reset streak when shield absorbs hit
                     const i = this.spawn.activeObs.indexOf(obs);
                     if (i >= 0) { this.spawn._obsPool.push(this.spawn.activeObs.splice(i, 1)[0]); }
                     return;
@@ -176,7 +178,7 @@ export class GameEngine {
             }
         }
 
-        // Plushies
+        // Plushies (coins)
         for (const pl of [...this.spawn.activePlush]) {
             if (overlaps(ph, this.spawn.plushHB(pl))) {
                 this._collectPlush(pl);
@@ -186,9 +188,26 @@ export class GameEngine {
         // Power-ups
         for (const pu of [...this.spawn.activePU]) {
             if (overlaps(ph, this.spawn.puHB(pu))) {
-                this.powerups.activate(pu.type);
+                this._activatePowerup(pu.type);
                 this.spawn.removePU(pu);
             }
+        }
+    }
+
+    /** Activate a power-up and track it for end-of-run share */
+    _activatePowerup(type) {
+        this.powerups.activate(type);
+        // Track best power-up for share card (priority order)
+        const priority = { airdrop: 0, bull: 1, pump: 2, bear: 3, shield: 4, magnet: 5, slowtime: 6 };
+        const cur = priority[type] ?? 99;
+        const best = priority[this._bestPowerup] ?? 99;
+        if (cur < best) this._bestPowerup = type;
+
+        // AIRDROP: instant +500 pts + coin burst
+        if (type === 'airdrop') {
+            this.score += 500 * this.powerups.getScoreMultiplier();
+            this.ui.showFloat('+500 AIRDROP!', this.player.x + this.player.w / 2, this.player.y - 10, '#ffd700');
+            this.spawn._spawnAirdropBurst();
         }
     }
 
@@ -216,13 +235,19 @@ export class GameEngine {
         }
 
         this.ui.checkStreakMilestone(this.streak);
-        this.ui.showFloat(`+${pts}`, pl.x + pl.w / 2, pl.y, '#535353');
+        this.ui.showFloat(`+${pts}`, pl.x + pl.w / 2, pl.y, pl.color || '#F7931A');
+
+        // Coin particle burst
+        this.spawn.emitCoinParticles(pl.x + pl.w / 2, pl.y + pl.h / 2, pl.color || '#F7931A');
+
         this.spawn.removePlush(pl);
     }
 
     _triggerGameOver() {
+        // Death flash animation before transitioning
+        this.player.triggerDeathFlash();
+
         this.state = 'GAMEOVER';
-        // Capture run data immediately
         this._pendingScore = {
             score: this.score,
             time: this.survivalTime,
@@ -237,8 +262,9 @@ export class GameEngine {
             best: this.storage.getBestScore(),
             btc: this.btcCount, eth: this.ethCount, sol: this.solCount,
             btcVal: this.btcValue, ethVal: this.ethValue, solVal: this.solValue,
+            powerup: this._bestPowerup,
+            biome: this._getBiome().name,
         };
-        // Show name modal (unless embed mode)
         if (!this.embedMode) {
             this._showNameModal();
         } else {
@@ -322,13 +348,9 @@ export class GameEngine {
 
     // ── Scenery system: changes every 1000 pts ──────────────────────────────
     static BIOMES = [
-        // 0 – Original fields (unchanged)
         { name: '🌾 THE FIELDS', skyTop: '#87CEEB', skyBot: '#c8e8f8', groundTop: '#6dc040', groundMid: '#5aab32', groundLine: '#3d7022', groundDot: '#4a8c2a', cloudTint: 'rgba(255,255,255,0.92)', cloudShadow: 'rgba(180,215,240,0.35)' },
-        // 1 – Night city
         { name: '🌙 MIDNIGHT', skyTop: '#040820', skyBot: '#0a1030', groundTop: '#1a1a2a', groundMid: '#0f0f1f', groundLine: '#555588', groundDot: '#252535', cloudTint: 'rgba(30,40,70,0.5)', cloudShadow: 'rgba(15,20,40,0.3)', fx: 'stars' },
-        // 5 – Matrix
         { name: '🟢 THE MATRIX', skyTop: '#000800', skyBot: '#001500', groundTop: '#003300', groundMid: '#002200', groundLine: '#00ff00', groundDot: '#004400', cloudTint: 'rgba(0,50,0,0.4)', cloudShadow: 'rgba(0,30,0,0.3)', fx: 'matrix' },
-        // originals
         { name: '🏜️ THE DESERT', skyTop: '#e8a844', skyBot: '#f0c878', groundTop: '#d4a855', groundMid: '#c49840', groundLine: '#a07830', groundDot: '#b08838', cloudTint: 'rgba(255,240,200,0.6)', cloudShadow: 'rgba(200,180,140,0.3)' },
         { name: '❄️ ARCTIC', skyTop: '#b0c4de', skyBot: '#e8eef5', groundTop: '#e8e8f0', groundMid: '#d0d0e0', groundLine: '#a0a0b0', groundDot: '#c0c0d0', cloudTint: 'rgba(240,245,255,0.9)', cloudShadow: 'rgba(180,190,210,0.3)', fx: 'snow' },
         { name: '🌋 VOLCANO', skyTop: '#2a0a0a', skyBot: '#5a1a0a', groundTop: '#3a1a0a', groundMid: '#2a0f05', groundLine: '#ff4400', groundDot: '#4a2a1a', cloudTint: 'rgba(120,60,40,0.6)', cloudShadow: 'rgba(80,30,20,0.4)', fx: 'lava' },
@@ -336,6 +358,8 @@ export class GameEngine {
         { name: '💜 CYBERPUNK', skyTop: '#1a0030', skyBot: '#2a0050', groundTop: '#2a1040', groundMid: '#1a0830', groundLine: '#ff00ff', groundDot: '#3a1850', cloudTint: 'rgba(100,0,150,0.4)', cloudShadow: 'rgba(60,0,100,0.3)' },
         { name: '🌊 UNDERWATER', skyTop: '#003050', skyBot: '#004070', groundTop: '#002a4a', groundMid: '#001a3a', groundLine: '#0080a0', groundDot: '#003a5a', cloudTint: 'rgba(40,100,140,0.4)', cloudShadow: 'rgba(20,60,100,0.3)' },
         { name: '🔥 HELL', skyTop: '#1a0000', skyBot: '#4a0000', groundTop: '#2a0a0a', groundMid: '#1a0505', groundLine: '#ff2200', groundDot: '#3a1010', cloudTint: 'rgba(100,20,0,0.5)', cloudShadow: 'rgba(60,10,0,0.3)', fx: 'lava' },
+        { name: '🌴 TROPICAL BEACH', skyTop: '#00bfff', skyBot: '#87eefd', groundTop: '#f0d060', groundMid: '#e8c040', groundLine: '#c8a020', groundDot: '#d0b030', cloudTint: 'rgba(255,255,240,0.85)', cloudShadow: 'rgba(200,230,240,0.3)', fx: 'beach' },
+        { name: '⚡ ELECTRIC STORM', skyTop: '#080818', skyBot: '#101028', groundTop: '#1a1a30', groundMid: '#101020', groundLine: '#8888ff', groundDot: '#202040', cloudTint: 'rgba(40,40,100,0.6)', cloudShadow: 'rgba(20,20,60,0.4)', fx: 'storm' },
     ];
 
     _getBiome() {
@@ -372,6 +396,8 @@ export class GameEngine {
         if (b.fx === 'spacex') this._drawSpaceX(ctx, W);
         if (b.fx === 'whitehouse') this._drawWhiteHouse(ctx, W);
         if (b.fx === 'nightcity') { this._drawStars(ctx, W); this._drawNightCity(ctx, W); }
+        if (b.fx === 'beach') this._drawBeach(ctx, W);
+        if (b.fx === 'storm') this._drawStorm(ctx, W);
 
         // ── Clouds ──
         for (const c of this.clouds) this._drawCloud(ctx, c.x, c.y, c.w, b);
@@ -861,15 +887,131 @@ export class GameEngine {
         ctx.globalAlpha = 1;
     }
 
+    // ── Tropical Beach ────────────────────────────────────────────────────────
+    _drawBeach(ctx, W) {
+        const gY = this.groundY;
+
+        // Sun
+        const sunX = W * 0.75, sunY = 45;
+        ctx.save();
+        ctx.shadowColor = '#ffee44'; ctx.shadowBlur = 30;
+        ctx.fillStyle = '#ffe066';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff8cc';
+        ctx.beginPath(); ctx.arc(sunX, sunY, 20, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.restore();
+
+        // Ocean wave strip
+        ctx.fillStyle = 'rgba(0,150,255,0.18)';
+        ctx.fillRect(0, gY - 22, W, 22);
+        for (let wx = 0; wx < W; wx += 80) {
+            const ox = ((wx - this.groundOffset * 0.5) % W + W) % W;
+            ctx.fillStyle = 'rgba(120,210,255,0.35)';
+            ctx.beginPath();
+            ctx.arc(ox, gY - 8, 18 + 4 * Math.sin(this.time * 2 + wx), 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Palm trees (left & right)
+        const drawPalm = (px) => {
+            const py = gY;
+            ctx.fillStyle = '#7a5c2a';
+            ctx.fillRect(px, py - 80, 6, 80);
+            // Leaves
+            ctx.fillStyle = '#2d8a30';
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2 + this.time * 0.3;
+                const lx = px + 3 + Math.cos(angle) * 28;
+                const ly = py - 78 + Math.sin(angle) * 14;
+                ctx.fillStyle = `hsl(${110 + i * 8},60%,35%)`;
+                ctx.beginPath(); ctx.ellipse(lx, ly, 16, 5, angle, 0, Math.PI * 2); ctx.fill();
+            }
+            // Coconuts
+            ctx.fillStyle = '#5a3a10';
+            ctx.beginPath(); ctx.arc(px + 6, py - 60, 5, 0, Math.PI * 2); ctx.fill();
+        };
+        drawPalm(50); drawPalm(W - 70);
+
+        // Seagulls
+        for (let i = 0; i < 4; i++) {
+            const bx = ((i * 197 + this.time * 18) % (W + 40)) - 20;
+            const by = 30 + i * 18 + Math.sin(this.time * 1.5 + i) * 6;
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bx - 8, by);
+            ctx.quadraticCurveTo(bx - 4, by - 4, bx, by);
+            ctx.quadraticCurveTo(bx + 4, by - 4, bx + 8, by);
+            ctx.stroke();
+        }
+    }
+
+    // ── Electric Storm ────────────────────────────────────────────────────────
+    _drawStorm(ctx, W) {
+        const gY = this.groundY;
+
+        // Dark storm clouds
+        ctx.fillStyle = 'rgba(40,40,80,0.6)';
+        const cloudData = [
+            { x: 0, y: 10, w: 200, h: 50 },
+            { x: 150, y: 5, w: 240, h: 60 },
+            { x: 380, y: 15, w: 180, h: 45 },
+            { x: 520, y: 0, w: 260, h: 65 },
+        ];
+        for (const c of cloudData) {
+            ctx.fillStyle = `rgba(30,30,70,0.55)`;
+            ctx.beginPath(); ctx.ellipse(c.x + c.w / 2, c.y + c.h / 2, c.w / 2, c.h / 2, 0, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Rain streaks
+        ctx.strokeStyle = 'rgba(180,180,255,0.4)'; ctx.lineWidth = 1;
+        for (let i = 0; i < 35; i++) {
+            const rx = ((i * 7919 + ~~(this.time * 90)) % (W + 40)) - 20;
+            const ry = ((this.time * 180 + i * 137) % (gY + 20)) - 20;
+            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx + 4, ry + 16); ctx.stroke();
+        }
+
+        // Lightning bolts (random, brief)
+        const boltA = Math.sin(this.time * 7.3 + 1) > 0.94;
+        const boltB = Math.sin(this.time * 5.1 + 3) > 0.96;
+        if (boltA) {
+            const bx = 180 + Math.sin(this.time * 3) * 80;
+            ctx.save();
+            ctx.strokeStyle = '#ccccff'; ctx.lineWidth = 2.5;
+            ctx.shadowColor = '#8888ff'; ctx.shadowBlur = 18;
+            ctx.beginPath();
+            ctx.moveTo(bx, 10); ctx.lineTo(bx - 8, 55); ctx.lineTo(bx + 6, 60);
+            ctx.lineTo(bx - 10, gY - 20); ctx.stroke();
+            ctx.restore();
+        }
+        if (boltB) {
+            const bx = 560 + Math.cos(this.time * 2) * 60;
+            ctx.save();
+            ctx.strokeStyle = '#ddddff'; ctx.lineWidth = 2;
+            ctx.shadowColor = '#aaaaff'; ctx.shadowBlur = 14;
+            ctx.beginPath();
+            ctx.moveTo(bx, 5); ctx.lineTo(bx + 10, 40); ctx.lineTo(bx - 4, 48);
+            ctx.lineTo(bx + 8, gY - 20); ctx.stroke();
+            ctx.restore();
+        }
+
+        // Ground electric glow
+        ctx.save();
+        ctx.globalAlpha = 0.15 + 0.1 * Math.sin(this.time * 8);
+        ctx.fillStyle = '#8888ff';
+        ctx.fillRect(0, gY - 3, W, 4);
+        ctx.restore();
+    }
+
     // ─── Input ────────────────────────────────────────────────────────────────
     _setupInput() {
         window.addEventListener('keydown', (e) => {
-            // Don't intercept keyboard events while user is typing in an input
             if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
 
+            const wasDown = this.keys[e.code];
             this.keys[e.code] = true;
+
             if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'MENU') this.restart();
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RUNNING') this.player.jump();
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RUNNING' && !wasDown) this.player.jump();
             if (e.code === 'ArrowDown' && this.state === 'RUNNING') this.player.duck();
             if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RANKING') this.restart();
             e.preventDefault();
@@ -882,22 +1024,42 @@ export class GameEngine {
 
     _setupTouch() {
         let touchStartY = 0;
+        let touchStartX = 0;
+        let isDucking = false;
+
         this.canvas.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
-            if (this.state === 'MENU') { this.restart(); return; }
-            if (this.state === 'RUNNING') { this.player.jump(); }
-            if (this.state === 'GAMEOVER') { this._handleCanvasClick(e.touches[0]); }
+            touchStartX = e.touches[0].clientX;
+
+            if (this.state === 'MENU') { this.restart(); e.preventDefault(); return; }
+            if (this.state === 'GAMEOVER' || this.state === 'RANKING') { this._handleCanvasClick(e.touches[0]); e.preventDefault(); return; }
+
+            if (this.state === 'RUNNING') {
+                // Check on-screen button zones
+                const zones = this.ui.getMobileHitZones(this.W, this.H);
+                const rect = this.canvas.getBoundingClientRect();
+                const sx = this.canvas.clientWidth / this.W;
+                const sy = this.canvas.clientHeight / this.H;
+                const cx = (e.touches[0].clientX - rect.left) / sx;
+                const cy = (e.touches[0].clientY - rect.top) / sy;
+
+                const inZone = (z) => cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h;
+                if (inZone(zones.jump)) { this.player.jump(); }
+                else if (inZone(zones.duck)) { this.player.duck(); isDucking = true; }
+                else { this.player.jump(); } // tap anywhere else = jump
+            }
             e.preventDefault();
         }, { passive: false });
 
         this.canvas.addEventListener('touchmove', (e) => {
+            if (this.state !== 'RUNNING') { e.preventDefault(); return; }
             const dy = e.touches[0].clientY - touchStartY;
-            if (dy > 30 && this.state === 'RUNNING') this.player.duck();
+            if (dy > 28 && !isDucking) { this.player.duck(); isDucking = true; }
             e.preventDefault();
         }, { passive: false });
 
         this.canvas.addEventListener('touchend', (e) => {
-            if (this.state === 'RUNNING') this.player._unduck();
+            if (this.state === 'RUNNING') { this.player._unduck(); isDucking = false; }
             e.preventDefault();
         }, { passive: false });
 
@@ -968,8 +1130,11 @@ export class GameEngine {
 
     _shareOnX() {
         const d = this._gameOverData;
+        const puLabel = d.powerup ? { bull: '🐂 Bull Market', pump: '💊 PUMP x3', bear: '🐻 Bear Mode', airdrop: '🪂 Airdrop', shield: '🪖 Shield', magnet: '🧲 Magnet', slowtime: '⏰ Slow Time' }[d.powerup] || '' : '';
+        const biome = d.biome || '';
+        const extras = [puLabel, biome].filter(Boolean).join(' · ');
         const text = encodeURIComponent(
-            `⚔️ My Trench Wallet from Punch in the Trenches\n\n💰 Total: $${Math.floor(d.score)}\n₿ BTC: ×${d.btc || 0} = $${d.btcVal || 0}\n◆ ETH: ×${d.eth || 0} = $${d.ethVal || 0}\nⓈ SOL: ×${d.sol || 0} = $${d.solVal || 0}\n\n⏱ ${Math.floor(d.time)}s | 🔥 Streak: ${d.streak}\n\nCan you survive the trenches?\n${this.gameUrl}\n\n#PunchInTheTrenches #crypto`
+            `⚔️ My Trench Wallet – PUNCH IN THE TRENCHES\n\n💰 $${Math.floor(d.score)} | ⏱ ${Math.floor(d.time)}s | 🔥 x${d.streak}${extras ? '\n' + extras : ''}\n\n₿×${d.btc || 0}  ◆×${d.eth || 0}  Ⓢ×${d.sol || 0}\n\nSurvive the trenches 👇\n${this.gameUrl}\n\n#PunchInTheTrenches #crypto #Solana`
         );
         window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
     }

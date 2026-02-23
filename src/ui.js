@@ -1,4 +1,4 @@
-// src/ui.js – HUD, overlays, menus, popups, leaderboard
+// src/ui.js – HUD, overlays, menus, popups, leaderboard, mobile buttons
 
 const MILESTONE_MSGS = {
     5: { text: 'HOLDING THE LINE! ⚔️', color: '#556b2f' },
@@ -24,11 +24,12 @@ const S = [
     { x: 880, y: 223, w: 120, h: 113 }, // 10 pose 6 (small arms)
 ];
 
-// Dance cycle: alternates poses 5-10 with arms-up (7) on the beat
 const DANCE_FRAMES = [5, 7, 6, 7, 8, 7, 9, 7, 10, 7];
-const DANCE_SPEED = 0.13; // seconds per frame
+const DANCE_SPEED = 0.13;
 
-// Load & background-remove shared sprite sheet
+// Detect touch device once
+const IS_TOUCH = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
 let _uiSheet = null;
 (function loadUISheet() {
     const raw = new Image();
@@ -59,8 +60,8 @@ export class UIManager {
         this._showLB = false;
         this._danceIdx = 0;
         this._danceT = 0;
-        this._lbTab = 'local';   // 'local' | 'global'
-        this._globalEntries = null;     // cached global entries
+        this._lbTab = 'local';
+        this._globalEntries = null;
         this._globalLoading = false;
     }
 
@@ -105,7 +106,6 @@ export class UIManager {
         const sc = String(Math.floor(e.score)).padStart(5, '0');
         ctx.fillText(`HI ${hi}  ${sc}`, W - 8, 16);
 
-        // SOL market badge
         if (e.market) {
             const mStr = e.market.getDisplayString();
             if (mStr) {
@@ -122,19 +122,10 @@ export class UIManager {
         ctx.fillStyle = e.streak > 0 ? '#e05c00' : '#888';
         ctx.fillText(`🔥${e.streak}`, 52, 24);
 
-        // Wallet address badge (small, top-left)
-        if (e.wallet?.isConnected()) {
-            const tier = e.wallet.getTier();
-            ctx.fillStyle = tier.color || '#888';
-            ctx.font = 'bold 8px monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(`🔗 ${e.wallet.getShortAddress()}`, 8, 33);
-        }
-
         if (e.streak >= 15) {
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillStyle = '#556b2f'; ctx.font = 'bold 11px monospace';
-            ctx.fillText('⚔️ TRENCH MODE ⚔️', W / 2, 9);   // top line
+            ctx.fillText('⚔️ TRENCH MODE ⚔️', W / 2, 9);
         }
 
         if (e.comboBoostActive) {
@@ -143,7 +134,7 @@ export class UIManager {
             ctx.fillStyle = '#556b2f'; ctx.fillRect(cX, 30, cW * (e.comboBoostTimer / 3), 4);
             ctx.fillStyle = '#3b4a1f'; ctx.font = 'bold 9px monospace';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(`COMBOx2 ${e.comboBoostTimer.toFixed(1)}`, W / 2, 24);   // bottom line
+            ctx.fillText(`COMBOx2 ${e.comboBoostTimer.toFixed(1)}`, W / 2, 24);
         }
 
         if (e.isWeekend) {
@@ -160,6 +151,38 @@ export class UIManager {
             ctx.fillStyle = '#2d4a1e';
             ctx.fillText(`${pu.icon}${pu.label}`, 8, by);
         });
+
+        // Mobile touch buttons (JUMP / DUCK)
+        if (IS_TOUCH) {
+            this._drawMobileButtons(ctx, e.W, e.H);
+        }
+    }
+
+    /** On-screen jump + duck buttons for mobile */
+    _drawMobileButtons(ctx, W, H) {
+        const btnY = H - 60;
+        const btnH = 48, btnW = 80;
+
+        ctx.save();
+        ctx.globalAlpha = 0.30;
+
+        // JUMP – right side
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.roundRect(W - btnW - 10, btnY, btnW, btnH, 10); ctx.fill();
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('JUMP ↑', W - btnW / 2 - 10, btnY + btnH / 2);
+
+        // DUCK – left side
+        ctx.globalAlpha = 0.30;
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.roundRect(10, btnY, btnW, btnH, 10); ctx.fill();
+        ctx.globalAlpha = 0.75;
+        ctx.fillStyle = '#fff';
+        ctx.fillText('DUCK ↓', 10 + btnW / 2, btnY + btnH / 2);
+
+        ctx.restore();
     }
 
     // ─── Popups ──────────────────────────────────────────────────────────────
@@ -169,7 +192,7 @@ export class UIManager {
             ctx.save(); ctx.globalAlpha = alpha;
             ctx.font = 'bold 22px monospace';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#535353'; ctx.fillText(p.text, p.x, p.y);
+            ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, p.y);
             ctx.restore();
         }
         for (const f of this.floats) {
@@ -177,7 +200,7 @@ export class UIManager {
             ctx.save(); ctx.globalAlpha = alpha;
             ctx.font = 'bold 14px monospace';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#535353'; ctx.fillText(f.text, f.x, f.y);
+            ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
             ctx.restore();
         }
     }
@@ -190,30 +213,24 @@ export class UIManager {
 
         ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-        // Hi-score
         ctx.fillStyle = G; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'right';
         ctx.fillText(`HI ${String(e.storage.getBestScore()).padStart(5, '0')}  00000`, W - 8, 18);
         ctx.textAlign = 'center';
 
-        // Title
         ctx.font = 'bold 28px monospace'; ctx.fillText('PUNCH IN THE', W / 2, H / 2 - 56);
         ctx.font = 'bold 32px monospace'; ctx.fillText('TRENCHES', W / 2, H / 2 - 26);
 
-        // Animated Punch sprites — use t to pick dance frame
+        // Animated dancers
         const danceIdx = DANCE_FRAMES[Math.floor(t / DANCE_SPEED) % DANCE_FRAMES.length];
         const sp = S[danceIdx];
         const dW = 62, dH = 56;
         if (_uiSheet) {
-            // Left dancer (normal)
             const lx = W / 2 - 175 - dW / 2;
             const ly = H / 2 - 56;
             ctx.drawImage(_uiSheet, sp.x, sp.y, sp.w, sp.h, lx, ly, dW, dH);
-
-            // Right dancer (mirrored)
             const rx = W / 2 + 175 - dW / 2;
             ctx.save();
-            ctx.translate(rx + dW, ly);
-            ctx.scale(-1, 1);
+            ctx.translate(rx + dW, ly); ctx.scale(-1, 1);
             ctx.drawImage(_uiSheet, sp.x, sp.y, sp.w, sp.h, 0, 0, dW, dH);
             ctx.restore();
         }
@@ -225,9 +242,8 @@ export class UIManager {
             ctx.fillText('PRESS SPACE / TAP TO START', W / 2, H / 2 + 20);
         }
         ctx.fillStyle = '#aaa'; ctx.font = '10px monospace';
-        ctx.fillText('↑ / Space = Jump     ↓ = Duck', W / 2, H / 2 + 44);
+        ctx.fillText('↑ / Space = Jump     ↓ = Duck     Double Tap = Air Jump', W / 2, H / 2 + 40);
 
-        // SOL price + market mode
         if (e.market) {
             const mStr = e.market.getDisplayString();
             if (mStr) {
@@ -235,26 +251,34 @@ export class UIManager {
                 const modeLabel = mode === 'bull' ? '🐂 BULL MARKET' : mode === 'bear' ? '🐻 BEAR MARKET' : '';
                 ctx.fillStyle = e.market.getColor();
                 ctx.font = 'bold 10px monospace';
-                ctx.fillText(mStr + (modeLabel ? '  ' + modeLabel : ''), W / 2, H / 2 + 60);
+                ctx.fillText(mStr + (modeLabel ? '  ' + modeLabel : ''), W / 2, H / 2 + 58);
             }
         }
 
-        // Wallet button (bottom-left of menu)
+        // Tier perks display (grayed if not connected)
+        const tier = e.wallet?.isConnected() ? e.wallet.getTier() : null;
+        if (tier?.name) {
+            ctx.fillStyle = tier.color; ctx.font = 'bold 9px monospace';
+            ctx.fillText(`[${tier.name}] TIER ACTIVE – ${tier.perks[0] || ''}`, W / 2, H / 2 + 74);
+        } else {
+            ctx.fillStyle = '#555'; ctx.font = '8px monospace';
+            ctx.fillText('🔒 Connect $PUNCH wallet for WHALE / HOLDER / DEGEN perks', W / 2, H / 2 + 74);
+        }
+
+        // Wallet button
         if (e.wallet?.hasWallet()) {
             const connected = e.wallet.isConnected();
-            const tier = connected ? e.wallet.getTier() : null;
-            const btnLabel = connected
-                ? `🔗 ${e.wallet.getShortAddress()}`
-                : '🔓 CONNECT WALLET';
-            const btnColor = connected ? (tier?.color || '#22c55e') : '#888';
+            const walletTier = connected ? e.wallet.getTier() : null;
+            const btnLabel = connected ? `🔗 ${e.wallet.getShortAddress()}` : '🔓 CONNECT WALLET';
+            const btnColor = connected ? (walletTier?.color || '#22c55e') : '#888';
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.beginPath(); ctx.roundRect(10, H - 30, 160, 20, 4); ctx.fill();
             ctx.fillStyle = btnColor; ctx.font = 'bold 9px monospace';
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
             ctx.fillText(btnLabel, 16, H - 20);
-            if (connected && tier?.name) {
-                ctx.fillStyle = tier.color;
-                ctx.fillText(`  [${tier.name}]`, 16 + ctx.measureText(btnLabel).width + 2, H - 20);
+            if (connected && walletTier?.name) {
+                ctx.fillStyle = walletTier.color;
+                ctx.fillText(`  [${walletTier.name}]`, 16 + ctx.measureText(btnLabel).width + 2, H - 20);
             }
         }
 
@@ -318,16 +342,15 @@ export class UIManager {
         }
     }
 
-    // ─── RANKING: Full canvas – compact wallet bar + single-column top-25 ────
+    // ─── RANKING ─────────────────────────────────────────────────────────────
     drawRanking(ctx, data) {
         const e = this.engine;
         const W = e.W, H = e.H;
 
-        // Dark bg
         ctx.fillStyle = 'rgba(8,14,4,0.97)';
         ctx.fillRect(0, 0, W, H);
 
-        // ── Compact wallet header (44px) ────────────────────────────────────
+        // Compact wallet header
         const hH = 44;
         ctx.fillStyle = '#1a2310'; ctx.fillRect(0, 0, W, hH);
         ctx.fillStyle = '#3b4a1f'; ctx.fillRect(0, hH, W, 1);
@@ -337,6 +360,14 @@ export class UIManager {
         ctx.fillText('⚔️ TRENCH WALLET', 10, 12);
         ctx.fillStyle = '#c8d8a0'; ctx.font = 'bold 20px monospace';
         ctx.fillText(`$${Math.floor(data.score).toLocaleString()}`, 10, 32);
+
+        // Tier badge in header (BUG FIX area: always shown before early returns)
+        const tier = e.wallet?.isConnected() ? e.wallet.getTier() : null;
+        if (tier?.name) {
+            ctx.fillStyle = tier.color; ctx.font = 'bold 8px monospace';
+            ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+            ctx.fillText(`[${tier.name}]`, W / 2 - 5, 2);
+        }
 
         const cryptos = [
             { icon: '₿', count: data.btc || 0, val: data.btcVal || 0, color: '#F7931A' },
@@ -355,31 +386,28 @@ export class UIManager {
         ctx.fillStyle = '#6b8050'; ctx.font = '8px monospace'; ctx.textAlign = 'left';
         ctx.fillText(`TIME ${Math.floor(data.time)}s  |  🔥${data.streak}  |  BEST $${data.best}`, 200, 35);
 
+        // ── BUG FIX: Always draw action buttons BEFORE early-exit guards ──────
         this._drawWalletButton(ctx, W - 104, 9, 96, 26, '▶ RESTART', '#3b4a1f', '#8b9a6b');
         if (!this.embedMode) {
             this._drawWalletButton(ctx, W - 210, 9, 96, 26, '🐦 SHARE', '#1a3a5c', '#60a5fa');
         }
 
-        // ── Tab buttons ──────────────────────────────────────────────────────
+        // Tab buttons
         const localActive = this._lbTab === 'local';
         const globalActive = this._lbTab === 'global';
         const tabW = 70, tabH = 18, tabY = hH + 5;
-        // LOCAL tab
         ctx.fillStyle = localActive ? '#3b4a1f' : '#111';
         ctx.beginPath(); ctx.roundRect(10, tabY, tabW, tabH, 4); ctx.fill();
         ctx.fillStyle = localActive ? '#8b9a6b' : '#444';
         ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('🏠 LOCAL', 10 + tabW / 2, tabY + tabH / 2);
-        // GLOBAL tab
         ctx.fillStyle = globalActive ? '#1a3a5c' : '#111';
         ctx.beginPath(); ctx.roundRect(88, tabY, tabW, tabH, 4); ctx.fill();
         ctx.fillStyle = globalActive ? '#60a5fa' : '#444';
         ctx.fillText('🌍 GLOBAL', 88 + tabW / 2, tabY + tabH / 2);
 
-        // ── Single-column ranking table ──────────────────────────────────────
+        // Table header
         const tY = hH + 28;
-        const rowH = 9;
-
         ctx.fillStyle = '#ffd700'; ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText('🏆  TOP 25 TRENCH SURVIVORS  🏆', W / 2, tY + 8);
@@ -388,15 +416,13 @@ export class UIManager {
         const hy = tY + 24;
         const cX = { rank: 20, name: 38, score: 220, time: 330, coins: 388, streak: 440, date: 495 };
         ctx.fillStyle = '#2d3a10'; ctx.font = '7px monospace'; ctx.textAlign = 'left';
-        ctx.fillText('#', cX.rank, hy);
-        ctx.fillText('NAME', cX.name, hy);
-        ctx.fillText('SCORE', cX.score, hy);
-        ctx.fillText('TIME', cX.time, hy);
-        ctx.fillText('🪙', cX.coins, hy);
-        ctx.fillText('🔥', cX.streak, hy);
-        ctx.fillText('DATE', cX.date, hy);
+        ['#', 'NAME', 'SCORE', 'TIME', '🪙', '🔥', 'DATE'].forEach((h, i) => {
+            const keys = ['rank', 'name', 'score', 'time', 'coins', 'streak', 'date'];
+            ctx.fillText(h, cX[keys[i]], hy);
+        });
         ctx.fillStyle = '#1e2a10'; ctx.fillRect(10, hy + 5, W - 20, 1);
 
+        // ── Early-exit guards come AFTER buttons are drawn ────────────────────
         if (this._lbTab === 'global') {
             if (this._globalLoading) {
                 ctx.fillStyle = '#60a5fa'; ctx.font = '10px monospace';
@@ -409,15 +435,15 @@ export class UIManager {
                 ctx.textAlign = 'center';
                 ctx.fillText('🔴 Server offline', W / 2, tY + 45);
                 ctx.fillStyle = '#888'; ctx.font = '9px monospace';
-                ctx.fillText('Run: node server/index.js   (port 3001)', W / 2, tY + 62);
+                ctx.fillText(`Server: ${window.PUNCH_SERVER || 'not configured'}`, W / 2, tY + 62);
                 return;
             }
         }
-        const entries = this._lbTab === 'global'
-            ? (this._globalEntries || [])
-            : (data.leaderboard || []);
+
+        const entries = this._lbTab === 'global' ? (this._globalEntries || []) : (data.leaderboard || []);
         const playerScore = Math.floor(data.score);
         const playerName = (data.playerName || '').trim() || 'Anonymous';
+        const rowH = 9;
 
         for (let i = 0; i < Math.min(entries.length, 25); i++) {
             const en = entries[i];
@@ -485,48 +511,6 @@ export class UIManager {
         ctx.restore();
     }
 
-    generateWalletImage(data, gameUrl) {
-        const c = document.createElement('canvas');
-        c.width = 600; c.height = 340;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#0d1208'; ctx.fillRect(0, 0, 600, 340);
-        ctx.fillStyle = '#1a2310';
-        ctx.beginPath(); ctx.roundRect(20, 20, 560, 300, 14); ctx.fill();
-        ctx.strokeStyle = '#3b4a1f'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.roundRect(20, 20, 560, 300, 14); ctx.stroke();
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#8b9a6b'; ctx.font = 'bold 16px monospace';
-        ctx.fillText('⚔️ PUNCH IN THE TRENCHES ⚔️', 300, 52);
-        ctx.fillStyle = '#556b2f'; ctx.fillRect(50, 66, 500, 1);
-        ctx.fillStyle = '#c8d8a0'; ctx.font = 'bold 36px monospace';
-        ctx.fillText(`$${Math.floor(data.score).toLocaleString()}`, 300, 100);
-        ctx.fillStyle = '#6b8050'; ctx.font = '12px monospace';
-        ctx.fillText('TOTAL EARNINGS', 300, 125);
-        ctx.fillStyle = '#556b2f'; ctx.fillRect(50, 138, 500, 1);
-        const items = [
-            { icon: '₿', label: 'Bitcoin (BTC)', count: data.btc || 0, val: data.btcVal || 0, color: '#F7931A' },
-            { icon: '◆', label: 'Ethereum (ETH)', count: data.eth || 0, val: data.ethVal || 0, color: '#627EEA' },
-            { icon: 'S', label: 'Solana (SOL)', count: data.sol || 0, val: data.solVal || 0, color: '#9945FF' },
-        ];
-        items.forEach((item, i) => {
-            const ly = 165 + i * 38;
-            ctx.fillStyle = item.color;
-            ctx.beginPath(); ctx.arc(72, ly, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center';
-            ctx.fillText(item.icon, 72, ly + 1);
-            ctx.textAlign = 'left'; ctx.fillStyle = '#a0b080'; ctx.font = '14px monospace';
-            ctx.fillText(`${item.label}  ×${item.count}`, 92, ly + 1);
-            ctx.textAlign = 'right'; ctx.fillStyle = '#c8d8a0'; ctx.font = 'bold 16px monospace';
-            ctx.fillText(`$${item.val}`, 550, ly + 1);
-        });
-        ctx.fillStyle = '#556b2f'; ctx.fillRect(50, 278, 500, 1);
-        ctx.textAlign = 'center'; ctx.fillStyle = '#6b8050'; ctx.font = '11px monospace';
-        ctx.fillText(`TIME: ${Math.floor(data.time)}s  |  STREAK: ${data.streak}  |  BEST: ${data.best}`, 300, 298);
-        ctx.fillStyle = '#4a5d23'; ctx.font = '10px monospace';
-        ctx.fillText('Play: ' + gameUrl, 300, 316);
-        return c;
-    }
-
     _drawButton(ctx, x, y, w, h, label, fill, shadow) {
         ctx.save();
         ctx.shadowColor = shadow; ctx.shadowBlur = 8;
@@ -539,18 +523,6 @@ export class UIManager {
         ctx.restore();
     }
 
-    _drawLeaderboard(ctx, cx, y, entries) {
-        ctx.fillStyle = 'rgba(255,255,255,0.05)';
-        ctx.fillRect(cx - 160, y, 320, 14 + entries.length * 16);
-        ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
-        ctx.fillText('🏆 LOCAL LEADERBOARD', cx, y + 10);
-        entries.forEach((e, i) => {
-            ctx.fillStyle = i === 0 ? '#fbbf24' : '#94a3b8';
-            ctx.font = '9px monospace'; ctx.textAlign = 'left';
-            ctx.fillText(`${i + 1}. ${e.name.slice(0, 10).padEnd(10)} ${String(e.score).padStart(6)}`, cx - 150, y + 22 + i * 14);
-        });
-    }
-
     // ─── Hit-test buttons ────────────────────────────────────────────────────
     hitTestGameOver(mx, my) {
         const e = this.engine;
@@ -561,7 +533,6 @@ export class UIManager {
         const cx = (mx - rect.left) / scaleX;
         const cy = (my - rect.top) / scaleY;
 
-        // GAMEOVER wallet card buttons (btnY = 18+198 = 216)
         const btnY = 216;
         const hit = (x, y, w, h) => cx >= x && cx <= x + w && cy >= y && cy <= y + h;
         if (hit(W / 2 - 155, btnY, 96, 26)) return 'restart';
@@ -571,16 +542,25 @@ export class UIManager {
             if (hit(W / 2 + 148, btnY, 96, 26)) return 'card';
         }
 
-        // RANKING header buttons (y=9, h=26)
+        // RANKING header buttons
         if (hit(W - 104, 9, 96, 26)) return 'restart';
         if (!this.embedMode && hit(W - 210, 9, 96, 26)) return 'share';
 
-        // Tab buttons (y = hH+5 = 49)
+        // Tab buttons
         const tabY = 49;
         if (hit(10, tabY, 70, 18)) return 'tab_local';
         if (hit(88, tabY, 70, 18)) return 'tab_global';
 
+        // Mobile JUMP / DUCK areas (during gameplay – handled separately in setupTouch)
         return null;
+    }
+
+    /** Returns mobile hit zone for runtime touch handling */
+    getMobileHitZones(W, H) {
+        return {
+            jump: { x: W - 90, y: H - 65, w: 80, h: 48 },
+            duck: { x: 10, y: H - 65, w: 80, h: 48 },
+        };
     }
 
     toggleLeaderboard() { this._showLB = !this._showLB; }

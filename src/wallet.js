@@ -8,44 +8,58 @@ const PUNCH_MINT = 'PUNCH_MINT_ADDRESS_HERE'; // ← replace on launch
 
 // Tiers based on $PUNCH held
 export const TIERS = [
-    { name: 'WHALE', min: 1_000_000, color: '#F7931A', shield: true, bullBonus: 3, comboStart: true },
-    { name: 'HOLDER', min: 500_000, color: '#9945FF', shield: false, bullBonus: 3, comboStart: false },
-    { name: 'DEGEN', min: 100_000, color: '#22c55e', shield: true, bullBonus: 0, comboStart: false },
-    { name: null, min: 0, color: '#888', shield: false, bullBonus: 0, comboStart: false },
+    {
+        name: 'WHALE', min: 1_000_000, color: '#F7931A',
+        shield: true, bullBonus: 5, comboStart: true,
+        magnetBonus: true, // doubles magnet radius
+        perks: ['🪖 Start with Shield', '🧲 2× Magnet Radius', '⚡ Start with Combo', '+5s Bull Market'],
+    },
+    {
+        name: 'HOLDER', min: 500_000, color: '#9945FF',
+        shield: false, bullBonus: 3, comboStart: false,
+        magnetBonus: false,
+        perks: ['+3s Bull Market', '🔮 Priority Queue'],
+    },
+    {
+        name: 'DEGEN', min: 100_000, color: '#22c55e',
+        shield: true, bullBonus: 10, comboStart: false,
+        magnetBonus: false,
+        perks: ['🪖 Start with Shield', '+10s Bull Market'],
+    },
+    {
+        name: null, min: 0, color: '#888',
+        shield: false, bullBonus: 0, comboStart: false,
+        magnetBonus: false,
+        perks: [],
+    },
 ];
 
-// Solana public mainnet RPC (rate-limited but free)
+// Solana public mainnet RPC
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
 
 // ── WalletManager ─────────────────────────────────────────────────────────────
 export class WalletManager {
     constructor() {
-        this._pubkey = null;    // base58 string
-        this._balance = 0;      // $PUNCH tokens (UI units, not lamports)
+        this._pubkey = null;
+        this._balance = 0;
         this._tier = TIERS[TIERS.length - 1];
         this._checking = false;
         this._error = null;
-
-        // expose for debug
         if (typeof window !== 'undefined') window._wallet = this;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
     isConnected() { return this._pubkey !== null; }
     getPubkey() { return this._pubkey; }
     getBalance() { return this._balance; }
     getTier() { return this._tier; }
 
-    /** Wallet available in browser? */
     hasWallet() { return !!(this._phantom() || this._solflare()); }
 
-    /** Short display: "AbCd...XyZ9" */
     getShortAddress() {
         if (!this._pubkey) return '';
         return `${this._pubkey.slice(0, 4)}...${this._pubkey.slice(-4)}`;
     }
 
-    /** Connect to Phantom or Solflare. Returns true on success. */
     async connect() {
         const provider = this._phantom() || this._solflare();
         if (!provider) {
@@ -56,7 +70,6 @@ export class WalletManager {
             const resp = await provider.connect();
             this._pubkey = resp.publicKey.toString();
             this._error = null;
-            // Fire-and-forget balance check
             this._checkBalance();
             return true;
         } catch (e) {
@@ -73,13 +86,11 @@ export class WalletManager {
         this._tier = TIERS[TIERS.length - 1];
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
     _phantom() { return window.phantom?.solana ?? window.solana; }
     _solflare() { return window.solflare?.isSolflare ? window.solflare : null; }
 
     async _checkBalance() {
         if (!this._pubkey || PUNCH_MINT === 'PUNCH_MINT_ADDRESS_HERE') {
-            // Token not deployed yet – keep balance at 0 (no benefits)
             this._tier = TIERS[TIERS.length - 1];
             return;
         }
@@ -101,7 +112,6 @@ export class WalletManager {
             });
             const data = await res.json();
             const accs = data?.result?.value ?? [];
-            // Sum across all token accounts (shouldn't be more than one, but be safe)
             let total = 0;
             for (const acc of accs) {
                 const amount = acc?.account?.data?.parsed?.info?.tokenAmount?.uiAmount ?? 0;
