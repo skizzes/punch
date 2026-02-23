@@ -696,7 +696,7 @@ ul {
 .cyber-bg-layer {
     position: absolute;
     inset: 0;
-    background-image: url('images/cyber_bg.png');
+    background-image: url('images/green_bg.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -801,19 +801,22 @@ ul {
 }
 
 .tier-card-premium {
-    background: #fff;
+    background: rgba(10, 14, 23, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 50px 40px;
     text-align: center;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     position: relative;
     overflow: hidden;
-    transition: transform 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .tier-card-premium:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    background: rgba(10, 14, 23, 0.9);
 }
 
 .tier-card-premium::before {
@@ -845,29 +848,31 @@ ul {
 .tier-card-premium h3 {
     font-family: var(--display);
     font-size: 28px;
-    color: #0f172a;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     margin-bottom: 8px;
 }
 
 .tier-req {
     font-size: 13px;
     font-weight: bold;
-    color: #64748b;
+    color: #94a3b8;
     margin-bottom: 30px;
     padding-bottom: 30px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .tier-perks {
-    text-align: left;
+    text-align: center;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 16px;
 }
 
 .tier-perks li {
     font-size: 14px;
-    color: #334155;
+    color: #cbd5e1;
     display: flex;
     align-items: center;
     gap: 12px;
