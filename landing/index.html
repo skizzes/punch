@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Punch in the Trenches ⚔️ | $PUNCH on Solana</title>
+    <meta name="description"
+        content="Survive the crypto trenches. Dodge red candles, collect BTC/ETH/SOL. The most degen runner on Solana. Play free, earn glory." />
+    <meta property="og:title" content="Punch in the Trenches ⚔️" />
+    <meta property="og:description" content="Survive the crypto trenches. The most degen runner on Solana. $PUNCH" />
+    <meta property="og:image" content="https://punchinthetrenches.fun/assets/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="landing.css" />
+</head>
+
+<body>
+
+    <!-- ── NAV ─────────────────────────────────────────────────────────── -->
+    <nav class="nav">
+        <div class="nav-brand">⚔️ <span>PUNCH</span></div>
+        <div class="nav-links">
+            <a href="#how-to-play">HOW TO PLAY</a>
+            <a href="#boosters">BOOSTERS</a>
+            <a href="#leaderboard">RANKINGS</a>
+            <a href="https://x.com/LucasSkizzes" target="_blank" class="nav-x">𝕏 @SkizzeS</a>
+        </div>
+        <a href="https://play.punchinthetrenches.fun" class="btn-play-nav">▶ PLAY NOW</a>
+    </nav>
+
+    <!-- ── HERO ────────────────────────────────────────────────────────── -->
+    <section class="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-particles" id="particles"></div>
+        <div class="hero-content">
+            <div class="hero-badge">$PUNCH · SOLANA</div>
+            <h1 class="hero-title">PUNCH IN THE<br><span class="accent">TRENCHES</span></h1>
+            <p class="hero-sub">Survive the crypto war. Dodge red candles, collect BTC/ETH/SOL.<br>The most degen runner
+                on Solana.</p>
+            <div class="hero-cta">
+                <a href="https://play.punchinthetrenches.fun" class="btn-play-main">⚔️ ENTER THE TRENCHES</a>
+                <button class="btn-wallet" id="walletBtn">🔓 CONNECT WALLET</button>
+            </div>
+            <div class="wallet-status" id="walletStatus"></div>
+        </div>
+
+        <!-- CSS Game Preview -->
+        <div class="game-preview">
+            <div class="preview-hud">
+                <span class="hud-left">HI <b>15420</b></span>
+                <span class="hud-mid">⚔️ TRENCH MODE ⚔️</span>
+                <span class="hud-right"><b>08234</b></span>
+            </div>
+            <div class="preview-sky" id="previewSky"></div>
+            <div class="preview-ground">
+                <div class="preview-player" id="previewPlayer">🐒</div>
+                <div class="preview-obs obs1">📈</div>
+                <div class="preview-obs obs2">📉</div>
+                <div class="preview-coin coin1">₿</div>
+                <div class="preview-coin coin2">◆</div>
+                <div class="preview-coin coin3">Ⓢ</div>
+                <div class="preview-pu">🐂</div>
+                <div class="ground-line"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STATS BAR ───────────────────────────────────────────────────── -->
+    <div class="stats-bar">
+        <div class="stat"><span class="stat-n" id="statPlayers">∞</span><span class="stat-l">DEGENS</span></div>
+        <div class="stat-sep">·</div>
+        <div class="stat"><span class="stat-n">12</span><span class="stat-l">BIOMES</span></div>
+        <div class="stat-sep">·</div>
+        <div class="stat"><span class="stat-n">7</span><span class="stat-l">POWER-UPS</span></div>
+        <div class="stat-sep">·</div>
+        <div class="stat"><span class="stat-n">3</span><span class="stat-l">COIN TYPES</span></div>
+    </div>
+
+    <!-- ── HOW TO PLAY ─────────────────────────────────────────────────── -->
+    <section class="section" id="how-to-play">
+        <div class="section-inner">
+            <h2 class="section-title">HOW TO PLAY</h2>
+            <div class="htp-grid">
+                <div class="htp-card">
+                    <div class="htp-icon">↑</div>
+                    <h3>JUMP</h3>
+                    <p>Space / Arrow Up / Tap right side of screen. Double-tap for AIR JUMP mid-flight.</p>
+                </div>
+                <div class="htp-card">
+                    <div class="htp-icon">↓</div>
+                    <h3>DUCK</h3>
+                    <p>Arrow Down / Swipe down / Tap left side. Duck under flying DUCK BARs and CRASH BARs.</p>
+                </div>
+                <div class="htp-card">
+                    <div class="htp-icon">₿</div>
+                    <h3>COLLECT COINS</h3>
+                    <p>Grab BTC (100pts), ETH (50pts) and SOL (25pts). Chain 5 in a row for a COMBO x2 burst!</p>
+                </div>
+                <div class="htp-card">
+                    <div class="htp-icon">🔥</div>
+                    <h3>BUILD STREAK</h3>
+                    <p>Every coin collected builds your combo streak. At 15+ consecutive you enter TRENCH MODE.</p>
+                </div>
+                <div class="htp-card">
+                    <div class="htp-icon">🌍</div>
+                    <h3>CHANGE BIOMES</h3>
+                    <p>Every 1000 pts the world changes — Fields, Midnight, Matrix, Desert, Arctic, Volcano and more!
+                    </p>
+                </div>
+                <div class="htp-card">
+                    <div class="htp-icon">📋</div>
+                    <h3>SHARE YOUR SCORE</h3>
+                    <p>Game over? Generate a share card, tweet your score and flex your Trench Wallet on X.</p>
+                </div>
+            </div>
+
+            <!-- Obstacles reference -->
+            <h3 class="subsection-title">⚠️ OBSTACLES</h3>
+            <div class="obs-grid">
+                <div class="obs-item">
+                    <div class="shape shape-candle-g"></div><b>GREEN CANDLE</b>
+                    <p>Standard ground obstacle. Jump over it.</p>
+                </div>
+                <div class="obs-item">
+                    <div class="shape shape-candle-r"></div><b>RED CANDLE</b>
+                    <p>Shorter. Easy to jump, hard in burst waves.</p>
+                </div>
+                <div class="obs-item">
+                    <div class="shape shape-candle-t"></div><b>TALL CANDLE</b>
+                    <p>Requires a full jump. Can't duck under.</p>
+                </div>
+                <div class="obs-item">
+                    <div class="shape shape-duck"></div><b>DUCK BAR</b>
+                    <p>Floating bar — duck under it or you die.</p>
+                </div>
+                <div class="obs-item">
+                    <div class="shape shape-crash"></div><b>CRASH BAR</b>
+                    <p>Wide red bar very low. Duck fast!</p>
+                </div>
+                <div class="obs-item">
+                    <div class="shape shape-spike">
+                        <div class="shape-spike-mid"></div>
+                    </div><b>SPIKE CLUSTER</b>
+                    <p>3 alternating spikes. Jump high enough.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── BOOSTERS ────────────────────────────────────────────────────── -->
+    <section class="section dark" id="boosters">
+        <div class="section-inner">
+            <h2 class="section-title">POWER-UPS & BOOSTERS</h2>
+            <p class="section-sub">Collect glowing power-up orbs mid-run for game-changing effects</p>
+            <div class="boost-grid">
+                <div class="boost-card">
+                    <div class="boost-icon shield">🪖</div>
+                    <h3>SHIELD</h3>
+                    <p>Absorbs one obstacle hit. Shield breaks but you survive. Combo resets on break.</p>
+                    <div class="boost-tag">DEFENSIVE</div>
+                </div>
+                <div class="boost-card">
+                    <div class="boost-icon magnet">🧲</div>
+                    <h3>MAGNET</h3>
+                    <p>Pulls all coins toward you for 5 seconds. WHALE holders get 2× magnet radius!</p>
+                    <div class="boost-tag">5s</div>
+                </div>
+                <div class="boost-card">
+                    <div class="boost-icon slow">⏰</div>
+                    <h3>SLOW TIME</h3>
+                    <p>World slows to 65% speed for 3s. Easier to navigate tight obstacle clusters.</p>
+                    <div class="boost-tag">3s</div>
+                </div>
+                <div class="boost-card featured">
+                    <div class="boost-icon pump">💊</div>
+                    <h3>PUMP.FUN PILL</h3>
+                    <p>Score multiplier 3× for 6 full seconds. Stack with COMBO for insane point bursts!</p>
+                    <div class="boost-tag rare">RARE · 3× SCORE</div>
+                </div>
+                <div class="boost-card featured">
+                    <div class="boost-icon bull">🐂</div>
+                    <h3>BULL MARKET</h3>
+                    <p>Coin RAIN for 5s — coins spawn rapidly. WHALE +5s · HOLDER +3s · DEGEN +10s!</p>
+                    <div class="boost-tag">RARE · COIN RAIN</div>
+                </div>
+                <div class="boost-card">
+                    <div class="boost-icon bear">🐻</div>
+                    <h3>BEAR MARKET</h3>
+                    <p>Speed slows to 70% AND score multiplies ×2. High risk-reward — survive to profit!</p>
+                    <div class="boost-tag">2× SCORE</div>
+                </div>
+                <div class="boost-card featured">
+                    <div class="boost-icon airdrop">🪂</div>
+                    <h3>AIRDROP</h3>
+                    <p>Instant +500 pts plus a burst of 6 free coins spawn ahead. The rarest drop.</p>
+                    <div class="boost-tag legendary">LEGENDARY</div>
+                </div>
+            </div>
+
+            <!-- Coins reference -->
+            <h3 class="subsection-title">💰 COINS</h3>
+            <div class="coins-row">
+                <div class="coin-ref btc">
+                    <div class="shape-coin btc"></div><b>BITCOIN</b><small>100 pts each</small>
+                </div>
+                <div class="coin-ref eth">
+                    <div class="shape-coin eth"></div><b>ETHEREUM</b><small>50 pts each</small>
+                </div>
+                <div class="coin-ref sol">
+                    <div class="shape-coin sol"></div><b>SOLANA</b><small>25 pts each</small>
+                </div>
+            </div>
+            <p class="coins-note">Weekend double-coin bonus active Saturday & Sunday 🎉</p>
+        </div>
+    </section>
+
+    <!-- ── WALLET TIERS ─────────────────────────────────────────────────── -->
+    <section class="section" id="tiers">
+        <div class="section-inner">
+            <h2 class="section-title">$PUNCH TOKEN TIERS</h2>
+            <p class="section-sub">Hold $PUNCH on Solana and connect your wallet for exclusive gameplay perks</p>
+            <div class="tier-grid">
+                <div class="tier-card whale">
+                    <div class="tier-crown">👑</div>
+                    <h3>WHALE</h3>
+                    <div class="tier-req">1,000,000+ $PUNCH</div>
+                    <ul>
+                        <li>🪖 Start with Shield</li>
+                        <li>🧲 2× Magnet Radius</li>
+                        <li>⚡ Start with Combo Boost</li>
+                        <li>🐂 +5s Bull Market</li>
+                    </ul>
+                </div>
+                <div class="tier-card holder">
+                    <div class="tier-crown">💜</div>
+                    <h3>HOLDER</h3>
+                    <div class="tier-req">500,000+ $PUNCH</div>
+                    <ul>
+                        <li>🐂 +3s Bull Market</li>
+                        <li>🔮 Priority Queue</li>
+                    </ul>
+                </div>
+                <div class="tier-card degen">
+                    <div class="tier-crown">💚</div>
+                    <h3>DEGEN</h3>
+                    <div class="tier-req">100,000+ $PUNCH</div>
+                    <ul>
+                        <li>🪖 Start with Shield</li>
+                        <li>🐂 +10s Bull Market</li>
+                    </ul>
+                </div>
+                <div class="tier-card free">
+                    <div class="tier-crown">⚔️</div>
+                    <h3>SOLDIER</h3>
+                    <div class="tier-req">Free to play</div>
+                    <ul>
+                        <li>Full game access</li>
+                        <li>Global leaderboard</li>
+                        <li>Share cards</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tier-cta">
+                <button class="btn-wallet-lg" id="walletBtnLg">🔓 CONNECT PHANTOM / SOLFLARE</button>
+                <p class="tier-note">Connect in browser · Perks applied instantly when you start a run</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── LEADERBOARD ─────────────────────────────────────────────────── -->
+    <section class="section dark" id="leaderboard">
+        <div class="section-inner">
+            <h2 class="section-title">🏆 TOP TRENCH SURVIVORS</h2>
+            <p class="section-sub">Global all-time rankings — updated live</p>
+            <div class="lb-wrapper">
+                <table class="lb-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CALLSIGN</th>
+                            <th>SCORE</th>
+                            <th>TIME</th>
+                            <th>COINS</th>
+                            <th>STREAK</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lbBody">
+                        <tr>
+                            <td colspan="6" class="lb-loading">⏳ Loading rankings...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="lb-footer">
+                <button class="btn-refresh" id="refreshBtn">↻ REFRESH</button>
+                <span class="lb-updated" id="lbUpdated"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── BIOMES SECTION ──────────────────────────────────────────────── -->
+    <section class="section" id="biomes">
+        <div class="section-inner">
+            <h2 class="section-title">🌍 12 UNIQUE BIOMES</h2>
+            <p class="section-sub">Every 1000 pts the environment transforms</p>
+            <div class="biome-grid">
+                <div class="biome" style="--sc:#87CEEB;--gc:#6dc040">🌾 THE FIELDS</div>
+                <div class="biome" style="--sc:#040820;--gc:#1a1a2a">🌙 MIDNIGHT</div>
+                <div class="biome" style="--sc:#000800;--gc:#003300">🟢 THE MATRIX</div>
+                <div class="biome" style="--sc:#e8a844;--gc:#d4a855">🏜️ THE DESERT</div>
+                <div class="biome" style="--sc:#b0c4de;--gc:#e8e8f0">❄️ ARCTIC</div>
+                <div class="biome" style="--sc:#2a0a0a;--gc:#3a1a0a">🌋 VOLCANO</div>
+                <div class="biome" style="--sc:#000005;--gc:#2a2a3a">🛸 DEEP SPACE</div>
+                <div class="biome" style="--sc:#1a0030;--gc:#2a1040">💜 CYBERPUNK</div>
+                <div class="biome" style="--sc:#003050;--gc:#002a4a">🌊 UNDERWATER</div>
+                <div class="biome" style="--sc:#1a0000;--gc:#2a0a0a">🔥 HELL</div>
+                <div class="biome" style="--sc:#00bfff;--gc:#f0d060">🌴 TROPICAL BEACH</div>
+                <div class="biome" style="--sc:#080818;--gc:#1a1a30">⚡ ELECTRIC STORM</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FINAL CTA ───────────────────────────────────────────────────── -->
+    <section class="final-cta">
+        <h2>READY TO SURVIVE THE TRENCHES?</h2>
+        <p>No download. No install. Just pure degen runner chaos.</p>
+        <a href="https://play.punchinthetrenches.fun" class="btn-play-main big">⚔️ PLAY FREE NOW</a>
+    </section>
+
+    <!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">⚔️ PUNCH IN THE TRENCHES</div>
+            <div class="footer-links">
+                <a href="https://x.com/LucasSkizzes" target="_blank">𝕏 @LucasSkizzes</a>
+                <a href="https://play.punchinthetrenches.fun" target="_blank">Play Game</a>
+                <a href="https://pump.fun" target="_blank">pump.fun/$PUNCH</a>
+            </div>
+            <div class="footer-credit">
+                Developed by <a href="https://x.com/LucasSkizzes" target="_blank"><strong>SkizzeS</strong></a>
+                &nbsp;·&nbsp; Built on Solana &nbsp;·&nbsp; $PUNCH
+            </div>
+        </div>
+    </footer>
+
+    <script src="landing.js"></script>
+</body>
+
+</html>

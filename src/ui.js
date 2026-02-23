@@ -153,9 +153,10 @@ export class UIManager {
         });
 
         // Mobile touch buttons (JUMP / DUCK)
-        if (IS_TOUCH) {
-            this._drawMobileButtons(ctx, e.W, e.H);
-        }
+        // Hidden visually per user request, but hit zones remain active in engine hook.
+        // if (IS_TOUCH) {
+        //     this._drawMobileButtons(ctx, e.W, e.H);
+        // }
     }
 
     /** On-screen jump + duck buttons for mobile */
@@ -334,11 +335,11 @@ export class UIManager {
         ctx.fillStyle = '#556b2f'; ctx.fillRect(cx + 20, cy + 186, cW - 40, 1);
 
         const btnY = cy + 198;
-        this._drawWalletButton(ctx, W / 2 - 155, btnY, 96, 26, '▶ RESTART', '#3b4a1f', '#8b9a6b');
+        this._drawWalletButton(ctx, W / 2 - 155, btnY, 80, 26, '▶ RESTART', '#3b4a1f', '#8b9a6b');
+        this._drawWalletButton(ctx, W / 2 - 65, btnY, 80, 26, '🏠 HOME', '#2d4a1e', '#8b9a6b');
         if (!this.embedMode) {
-            this._drawWalletButton(ctx, W / 2 - 48, btnY, 96, 26, '🐦 SHARE', '#1a3a5c', '#60a5fa');
-            this._drawWalletButton(ctx, W / 2 + 58, btnY, 80, 26, '📋 COPY', '#3b4a1f', '#8b9a6b');
-            this._drawWalletButton(ctx, W / 2 + 148, btnY, 96, 26, '📸 CARD', '#4a2a00', '#F7931A');
+            this._drawWalletButton(ctx, W / 2 + 25, btnY, 60, 26, '📋 COPY', '#3b4a1f', '#8b9a6b');
+            this._drawWalletButton(ctx, W / 2 + 95, btnY, 80, 26, '📸 CARD', '#4a2a00', '#F7931A');
         }
     }
 
@@ -386,10 +387,12 @@ export class UIManager {
         ctx.fillStyle = '#6b8050'; ctx.font = '8px monospace'; ctx.textAlign = 'left';
         ctx.fillText(`TIME ${Math.floor(data.time)}s  |  🔥${data.streak}  |  BEST $${data.best}`, 200, 35);
 
-        // ── BUG FIX: Always draw action buttons BEFORE early-exit guards ──────
+        // ── BUG FIX:        // Draw RESTART and HOME buttons BEFORE anything that can exit early
         this._drawWalletButton(ctx, W - 104, 9, 96, 26, '▶ RESTART', '#3b4a1f', '#8b9a6b');
+        this._drawWalletButton(ctx, W - 192, 9, 80, 26, '🏠 HOME', '#2d4a1e', '#8b9a6b');
+
         if (!this.embedMode) {
-            this._drawWalletButton(ctx, W - 210, 9, 96, 26, '🐦 SHARE', '#1a3a5c', '#60a5fa');
+            this._drawWalletButton(ctx, W - 296, 9, 96, 26, '🐦 SHARE', '#1a3a5c', '#60a5fa');
         }
 
         // Tab buttons
@@ -535,16 +538,17 @@ export class UIManager {
 
         const btnY = 216;
         const hit = (x, y, w, h) => cx >= x && cx <= x + w && cy >= y && cy <= y + h;
-        if (hit(W / 2 - 155, btnY, 96, 26)) return 'restart';
+        if (hit(W / 2 - 155, btnY, 80, 26)) return 'restart';
+        if (hit(W / 2 - 65, btnY, 80, 26)) return 'home';
         if (!this.embedMode) {
-            if (hit(W / 2 - 48, btnY, 96, 26)) return 'share';
-            if (hit(W / 2 + 58, btnY, 80, 26)) return 'copy';
-            if (hit(W / 2 + 148, btnY, 96, 26)) return 'card';
+            if (hit(W / 2 + 25, btnY, 60, 26)) return 'copy';
+            if (hit(W / 2 + 95, btnY, 80, 26)) return 'card';
         }
 
         // RANKING header buttons
         if (hit(W - 104, 9, 96, 26)) return 'restart';
-        if (!this.embedMode && hit(W - 210, 9, 96, 26)) return 'share';
+        if (hit(W - 192, 9, 80, 26)) return 'home';
+        if (!this.embedMode && hit(W - 296, 9, 96, 26)) return 'share';
 
         // Tab buttons
         const tabY = 49;

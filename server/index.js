@@ -8,12 +8,15 @@
 // ─────────────────────────────────────────────────────────────────
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Pure API server now. Frontend is hosted separately.
 
 // ── Supabase client (lightweight REST calls via fetch) ────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;

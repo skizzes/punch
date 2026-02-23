@@ -1072,6 +1072,7 @@ export class GameEngine {
 
     _handleCanvasClick(ev) {
         const action = this.ui.hitTestGameOver(ev.clientX, ev.clientY);
+        if (action === 'home') { window.location.href = 'https://punchinthetrenches.fun'; return; }
         if (action === 'restart') { this.restart(); return; }
         if (action === 'share') { this._shareOnX(); return; }
         if (action === 'copy') { this._copyScore(); return; }
