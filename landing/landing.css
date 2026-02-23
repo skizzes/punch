@@ -389,14 +389,27 @@ ul {
     image-rendering: pixelated;
 }
 
+@keyframes float-hero {
+
+    0%,
+    100% {
+        transform: scale(2.5) translateY(0);
+    }
+
+    50% {
+        transform: scale(2.5) translateY(-6px);
+    }
+}
+
 .pixel-punch-hero {
-    width: 114px;
-    height: 118px;
+    width: 140px;
+    height: 114px;
     background: url('../assets/monkey_sprites.png') no-repeat;
-    background-position: 0 0;
-    transform: scale(3.5);
+    background-position: -28px -52px;
+    animation: float-hero 6s ease-in-out infinite;
+    /* Removed scaling here safely since animation handles it */
     image-rendering: pixelated;
-    margin: 40px auto;
+    margin: 60px auto;
 }
 
 kbd {

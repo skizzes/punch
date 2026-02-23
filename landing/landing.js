@@ -150,3 +150,36 @@ window.addEventListener('scroll', () => {
         a.style.color = a.getAttribute('href') === `#${current}` ? '#22c55e' : '';
     });
 }, { passive: true });
+
+// ── Hero Sprite Background Removal ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const heroEl = document.querySelector('.pixel-punch-hero');
+    if (!heroEl) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; // Just in case
+    img.src = '../assets/monkey_sprites.png';
+    // Landing pages are at /landing, assets are at /assets
+    img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        const cx = c.getContext('2d');
+        cx.drawImage(img, 0, 0);
+
+        const p = cx.getImageData(0, 0, c.width, c.height);
+        // Top-left pixel is the background color color-key
+        const bgR = p.data[0], bgG = p.data[1], bgB = p.data[2];
+
+        for (let i = 0; i < p.data.length; i += 4) {
+            const r = p.data[i], g = p.data[i + 1], b = p.data[i + 2];
+            // Safe tolerance to remove flat background without eating into sprite body
+            if (Math.abs(r - bgR) < 10 && Math.abs(g - bgG) < 10 && Math.abs(b - bgB) < 10) {
+                p.data[i + 3] = 0; // Transparent
+            }
+        }
+        cx.putImageData(p, 0, 0);
+
+        // Swap background to data URL 
+        heroEl.style.backgroundImage = `url(${c.toDataURL()})`;
+    };
+});
