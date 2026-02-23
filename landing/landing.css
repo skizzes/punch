@@ -383,10 +383,35 @@ ul {
 
 .floating-img {
     width: 100%;
-    max-width: 500px;
-    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8));
-    animation: floatImg 6s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
+    max-width: 100%;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 128, 0.4));
     image-rendering: pixelated;
+}
+
+.pixel-punch-hero {
+    width: 114px;
+    height: 118px;
+    background: url('../assets/monkey_sprites.png') no-repeat;
+    background-position: 0 0;
+    transform: scale(3.5);
+    image-rendering: pixelated;
+    margin: 40px auto;
+}
+
+kbd {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-family: var(--body);
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-block;
+    text-shadow: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes floatImg {
@@ -696,12 +721,13 @@ ul {
 .cyber-bg-layer {
     position: absolute;
     inset: 0;
-    background-image: url('images/green_bg.png');
+    background-image: url('images/trench_bg.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    /* Parallax effect */
-    opacity: 0.8;
+    image-rendering: pixelated;
+    filter: brightness(0.25) contrast(1.2);
+    z-index: 1;
 }
 
 .cyber-bg-layer::after {
