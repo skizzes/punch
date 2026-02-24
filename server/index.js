@@ -50,7 +50,13 @@ async function insertScore(entry) {
         headers: sbHeaders(),
         body: JSON.stringify(entry),
     });
-    return res.ok ? (await res.json())[0] : null;
+    if (!res.ok) {
+        const err = await res.text();
+        console.error('Supabase insertScore error:', res.status, err);
+        return null;
+    }
+    const body = await res.json();
+    return Array.isArray(body) ? body[0] : body ?? null;
 }
 
 async function getRank(id) {
