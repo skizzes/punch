@@ -1165,22 +1165,7 @@ export class GameEngine {
         const cy = (ev.clientY - rect.top) / scaleY;
         // Wallet button zone: y = H-30, h=20
         if (cy >= this.H - 30 && cy <= this.H - 10) {
-            if (this.wallet.isConnected()) {
-                this.wallet.disconnect();
-                this.ui.showPopup('🔓 Wallet disconnected', '#888');
-            } else {
-                this.wallet.connect().then(ok => {
-                    if (ok) {
-                        const tier = this.wallet.getTier();
-                        const msg = tier?.name
-                            ? `🔗 ${this.wallet.getShortAddress()} [${tier.name}]`
-                            : `🔗 ${this.wallet.getShortAddress()}`;
-                        this.ui.showPopup(msg, tier?.color || '#22c55e');
-                    } else {
-                        this.ui.showPopup('❌ ' + (this.wallet._error || 'Connect failed'), '#ef4444');
-                    }
-                });
-            }
+            this.ui.showPopup('🔒 Wallet Connect – Coming Soon!', '#ffd700');
         }
     }
 

@@ -269,21 +269,13 @@ export class UIManager {
             ctx.fillText('🔒 Connect $PUNCH wallet for WHALE / HOLDER / DEGEN perks', W / 2, H / 2 + 74);
         }
 
-        // Wallet button
-        if (e.wallet?.hasWallet()) {
-            const connected = e.wallet.isConnected();
-            const walletTier = connected ? e.wallet.getTier() : null;
-            const btnLabel = connected ? `🔗 ${e.wallet.getShortAddress()}` : '🔓 CONNECT WALLET';
-            const btnColor = connected ? (walletTier?.color || '#22c55e') : '#888';
+        // Wallet button – Coming Soon
+        if (e.wallet?.hasWallet !== undefined) { // always show regardless
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.beginPath(); ctx.roundRect(10, H - 30, 160, 20, 4); ctx.fill();
-            ctx.fillStyle = btnColor; ctx.font = 'bold 9px monospace';
+            ctx.beginPath(); ctx.roundRect(10, H - 30, 180, 20, 4); ctx.fill();
+            ctx.fillStyle = '#ffd700'; ctx.font = 'bold 9px monospace';
             ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-            ctx.fillText(btnLabel, 16, H - 20);
-            if (connected && walletTier?.name) {
-                ctx.fillStyle = walletTier.color;
-                ctx.fillText(`  [${walletTier.name}]`, 16 + ctx.measureText(btnLabel).width + 2, H - 20);
-            }
+            ctx.fillText('🔒 Wallet Connect – Coming Soon', 16, H - 20);
         }
 
         ctx.restore();
