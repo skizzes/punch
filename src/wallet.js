@@ -4,7 +4,7 @@
 //   Replace PUNCH_MINT below with the real SPL token mint address.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PUNCH_MINT = 'PUNCH_MINT_ADDRESS_HERE'; // ← replace on launch
+const PUNCH_MINT = 'NV2RYH954cTJ3ckFUpvfqaQXU4ARqqDH3562nFSpump';
 
 // Tiers based on $PUNCH held
 export const TIERS = [
