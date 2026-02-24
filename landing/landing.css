@@ -314,6 +314,40 @@ ul {
     box-shadow: 0 2px 0 #8b6200, 0 0 60px rgba(255, 190, 40, 0.6);
 }
 
+.hero-premium-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.btn-community-x {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(10, 14, 23, 0.75);
+    color: #fff;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    padding: 13px 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+    text-shadow: none;
+}
+
+.btn-community-x:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 24px rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
 .wallet-status-glow {
     margin-top: 20px;
     color: var(--green);

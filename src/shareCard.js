@@ -131,7 +131,7 @@ function _renderCard(engine, { score, survivalTime, plushCount, bestStreak, biom
 
     ctx.font = 'bold 12px monospace';
     ctx.fillStyle = '#ffcc44';
-    ctx.fillText('play.punchonsol.com', 670, 125);
+    ctx.fillText('punchinthetrenches.fun', 670, 125);
 
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = '10px monospace';
@@ -213,7 +213,7 @@ function _showModal(cardCanvas, { score }, engine) {
 
     const extras = [pu, biome].filter(Boolean).join(' · ');
     const tweetTxt = encodeURIComponent(
-        `⚔️ I scored ${Math.floor(score)} pts in PUNCH IN THE TRENCHES!${extras ? '\n' + extras : ''}\nCan you beat me?\n\n$PUNCH #Solana #crypto\n▶️ play.punchonsol.com`
+        `⚔️ I just scored ${Math.floor(score)} pts surviving the crypto trenches!${extras ? ' (' + extras + ')' : ''}\n\nCan you beat me? Come play the most degen runner on Solana 👇\n\n🌐 punchinthetrenches.fun\n\n$PUNCH #Solana #crypto #web3`
     );
 
     const btnStyle = (bg) => `
