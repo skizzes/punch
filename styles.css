@@ -244,92 +244,78 @@ body.embed-mode #lb-panel {
   display: none;
 }
 
-/* ── Pause button ────────────────────────────────────────────────────────── */
-#pause-btn {
+/* ── HUD Toolbar (pause + audio) ──────────────────────────────────────────────── */
+#game-toolbar {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(26, 35, 16, 0.80);
-  border: 1.5px solid #556b2f;
-  color: #c8d8a0;
-  font-size: 14px;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  z-index: 50;
+}
+
+/* Shared base for toolbar buttons */
+#pause-btn,
+#audio-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  background: rgba(10, 16, 5, 0.82);
+  border: 1px solid rgba(85, 107, 47, 0.7);
+  color: #a0b878;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 50;
-  transition: background 0.2s, transform 0.15s;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
   user-select: none;
   line-height: 1;
+  font-family: var(--font);
+  padding: 0;
+  letter-spacing: 0;
+  backdrop-filter: blur(4px);
 }
 
-#pause-btn:hover {
-  background: rgba(59, 74, 31, 0.95);
-  transform: scale(1.1);
+#pause-btn:hover,
+#audio-btn:hover {
+  background: rgba(40, 58, 18, 0.95);
+  border-color: #8b9a6b;
+  transform: scale(1.08);
 }
 
 #pause-btn.paused {
-  background: rgba(55, 20, 20, 0.90);
-  border-color: #ef4444;
+  background: rgba(50, 10, 10, 0.90);
+  border-color: rgba(239, 68, 68, 0.8);
   color: #ef4444;
-  content: '▶';
-}
-
-/* ── Audio controls ──────────────────────────────────────────────────────── */
-#audio-btn {
-  position: fixed;
-  bottom: 12px;
-  left: 12px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(26, 35, 16, 0.88);
-  border: 1.5px solid #556b2f;
-  color: #c8d8a0;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 200;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  user-select: none;
-}
-
-#audio-btn:hover {
-  background: rgba(59, 74, 31, 0.95);
-  transform: scale(1.08);
-  box-shadow: 0 4px 18px rgba(85, 107, 47, 0.4);
 }
 
 #audio-btn.muted {
-  opacity: 0.55;
-  filter: grayscale(0.7);
+  opacity: 0.5;
+  filter: grayscale(0.6);
 }
 
 #audio-panel {
-  position: fixed;
-  bottom: 56px;
-  left: 12px;
-  background: rgba(15, 22, 8, 0.97);
-  border: 1.5px solid #3b4a1f;
-  border-radius: 10px;
-  padding: 14px 16px;
-  min-width: 210px;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(10, 14, 5, 0.97);
+  border: 1px solid rgba(59, 74, 31, 0.9);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-width: 205px;
   z-index: 200;
-  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.18s ease;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  animation: slideDown 0.16s ease;
   font-family: var(--font);
 }
 
-@keyframes slideUp {
+@keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-6px);
   }
 
   to {
