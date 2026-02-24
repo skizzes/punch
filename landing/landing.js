@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!heroEl) return;
     const img = new Image();
     img.crossOrigin = 'anonymous'; // Just in case
-    img.src = '/assets/monkey_sprites.png';
+    img.src = 'assets/monkey_sprites.png';
     // Landing pages are at /landing, assets are at /assets
     img.onload = () => {
         const c = document.createElement('canvas');
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = '/assets/monkey_sprites.png';
+    img.src = 'assets/monkey_sprites.png';
 
     let frameIdx = 0;
     let last = 0;
