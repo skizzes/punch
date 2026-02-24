@@ -49,28 +49,28 @@ function getProvider() {
     return window.phantom?.solana ?? window.solana ?? window.solflare ?? null;
 }
 
+// Wallet connect temporarily disabled – Coming Soon
 async function connectWallet() {
-    const provider = getProvider();
-    if (!provider) {
-        alert('No Solana wallet found! Install Phantom or Solflare.');
-        return;
-    }
-    try {
-        const resp = await provider.connect();
-        walletPubkey = resp.publicKey.toString();
-        const short = `${walletPubkey.slice(0, 4)}...${walletPubkey.slice(-4)}`;
-        ['walletBtn', 'walletBtnLg'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent = `🔗 ${short}`;
-                el.style.borderColor = '#22c55e';
-                el.style.color = '#22c55e';
-            }
-        });
-        const statusEl = document.getElementById('walletStatus');
-        if (statusEl) statusEl.textContent = `✅ Connected: ${short}  — perks activate in-game`;
-    } catch (e) {
-        console.warn('Wallet connect rejected', e);
+    // Flash all buttons
+    ['walletBtn', 'walletBtnLg', 'walletBtnNav'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const orig = el.textContent;
+        el.textContent = '🔒 Coming Soon!';
+        el.style.color = '#ffd700';
+        el.style.borderColor = '#ffd700';
+        setTimeout(() => {
+            el.textContent = orig;
+            el.style.color = '';
+            el.style.borderColor = '';
+        }, 2500);
+    });
+    // Status message
+    const statusEl = document.getElementById('walletStatus');
+    if (statusEl) {
+        statusEl.textContent = '🔒 Wallet Connect — Coming Soon!';
+        statusEl.style.color = '#ffd700';
+        setTimeout(() => { statusEl.textContent = ''; statusEl.style.color = ''; }, 3000);
     }
 }
 
