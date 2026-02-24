@@ -21,10 +21,16 @@
   <div id="game-wrapper">
     <canvas id="gameCanvas" tabindex="0"></canvas>
 
-    <!-- HUD toolbar: pause + audio grouped top-right -->
+    <!-- HUD toolbar: pause + audio — bottom of canvas -->
     <div id="game-toolbar">
-      <button id="pause-btn" class="hidden" title="Pause (P)">⏸</button>
-      <button id="audio-btn" title="Sound Settings">🎵</button>
+      <button id="pause-btn" class="hud-btn hidden" title="Pause (P)">
+        <span class="hud-btn-icon">⏸</span>
+        <span class="hud-btn-label">PAUSE</span>
+      </button>
+      <button id="audio-btn" class="hud-btn" title="Sound Settings">
+        <span class="hud-btn-icon">🎵</span>
+        <span class="hud-btn-label">SOUND</span>
+      </button>
       <div id="audio-panel" class="hidden">
         <div class="audio-panel-title">🎵 SOUND SETTINGS</div>
         <div class="audio-row">

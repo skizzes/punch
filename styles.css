@@ -247,75 +247,107 @@ body.embed-mode #lb-panel {
 /* ── HUD Toolbar (pause + audio) ──────────────────────────────────────────────── */
 #game-toolbar {
   position: absolute;
-  top: 10px;
+  bottom: 10px;
   right: 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   z-index: 50;
 }
 
-/* Shared base for toolbar buttons */
-#pause-btn,
-#audio-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 5px;
-  background: rgba(10, 16, 5, 0.82);
-  border: 1px solid rgba(85, 107, 47, 0.7);
-  color: #a0b878;
-  font-size: 13px;
+/* Pixel-art game button — matching SHARE / HOME / RESTART aesthetic */
+.hud-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.18s, border-color 0.18s, transform 0.12s;
-  user-select: none;
-  line-height: 1;
+  gap: 6px;
+  padding: 0 14px;
+  height: 36px;
+  border-radius: 8px;
+  background: #1a2f0a;
+  border: 1.5px solid #3d5a1a;
+  color: #a8c870;
   font-family: var(--font);
-  padding: 0;
-  letter-spacing: 0;
-  backdrop-filter: blur(4px);
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+  image-rendering: pixelated;
+  white-space: nowrap;
 }
 
-#pause-btn:hover,
-#audio-btn:hover {
-  background: rgba(40, 58, 18, 0.95);
-  border-color: #8b9a6b;
-  transform: scale(1.08);
+.hud-btn:hover {
+  background: #253d10;
+  border-color: #6a9a28;
+  color: #c8e090;
+  transform: scale(1.04);
+}
+
+.hud-btn-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.hud-btn-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
 }
 
 #pause-btn.paused {
-  background: rgba(50, 10, 10, 0.90);
-  border-color: rgba(239, 68, 68, 0.8);
-  color: #ef4444;
+  background: #2e0808;
+  border-color: #7a2020;
+  color: #e87070;
+}
+
+#pause-btn.paused:hover {
+  background: #3d0a0a;
+  border-color: #a03030;
+  color: #ef9090;
+}
+
+#audio-btn.muted .hud-btn-icon {
+  filter: grayscale(1);
 }
 
 #audio-btn.muted {
-  opacity: 0.5;
-  filter: grayscale(0.6);
+  opacity: 0.6;
 }
 
 #audio-panel {
   position: absolute;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   right: 0;
-  background: rgba(10, 14, 5, 0.97);
-  border: 1px solid rgba(59, 74, 31, 0.9);
+  background: rgba(8, 12, 4, 0.97);
+  border: 1.5px solid #2d4012;
   border-radius: 8px;
   padding: 12px 14px;
   min-width: 205px;
   z-index: 200;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
-  animation: slideDown 0.16s ease;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.16s ease;
   font-family: var(--font);
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
   }
 
   to {
