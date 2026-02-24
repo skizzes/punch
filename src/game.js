@@ -7,6 +7,7 @@ import { StorageManager } from './storage.js';
 import { MarketWatcher } from './market.js';
 import { showShareCard } from './shareCard.js';
 import { WalletManager } from './wallet.js';
+import { AudioManager } from './audio.js';
 
 // ─── AABB collision ────────────────────────────────────────────────────────
 function overlaps(a, b) {
@@ -47,6 +48,7 @@ export class GameEngine {
         this.storage = new StorageManager();
         this.market = new MarketWatcher();   // live SOL price
         this.wallet = new WalletManager();   // Phantom / Solflare
+        this.audio = new AudioManager();     // sound engine
         this.groundY = this.H - 50;
         this.player = new Player(80, this.groundY);
         this.spawn = new SpawnDirector(this);
@@ -168,6 +170,7 @@ export class GameEngine {
             if (overlaps(ph, this.spawn.obsHB(obs))) {
                 if (this.powerups.shieldActive) {
                     this.powerups.breakShield();
+                    this.audio.playShieldHit();
                     this.streak = 0; // BUG FIX: reset streak when shield absorbs hit
                     const i = this.spawn.activeObs.indexOf(obs);
                     if (i >= 0) { this.spawn._obsPool.push(this.spawn.activeObs.splice(i, 1)[0]); }
@@ -203,6 +206,13 @@ export class GameEngine {
         const best = priority[this._bestPowerup] ?? 99;
         if (cur < best) this._bestPowerup = type;
 
+        // Audio feedback per powerup type
+        if (type === 'airdrop') {
+            this.audio.playAirdrop();
+        } else {
+            this.audio.playPowerup();
+        }
+
         // AIRDROP: instant +500 pts + coin burst
         if (type === 'airdrop') {
             this.score += 500 * this.powerups.getScoreMultiplier();
@@ -234,6 +244,7 @@ export class GameEngine {
             this.comboBoostTimer = 3;
         }
 
+        this.audio.playCoin();
         this.ui.checkStreakMilestone(this.streak);
         this.ui.showFloat(`+${pts}`, pl.x + pl.w / 2, pl.y, pl.color || '#F7931A');
 
@@ -246,6 +257,8 @@ export class GameEngine {
     _triggerGameOver() {
         // Death flash animation before transitioning
         this.player.triggerDeathFlash();
+        this.audio.playDeath();
+        this.audio.stopMusic();
 
         this.state = 'GAMEOVER';
         this._pendingScore = {
@@ -313,11 +326,14 @@ export class GameEngine {
         this._gameOverData.playerName = finalName;
         this._gameOverData.leaderboard = this.storage.getLeaderboard();
         this.state = 'RANKING';
+        // Play game-over jingle a beat after death sfx
+        setTimeout(() => this.audio.playGameOver(), 350);
     }
 
     restart() {
         this._initRun();
         this.state = 'RUNNING';
+        this.audio.startMusic();
         // hide modal in case it's still showing
         const modal = document.getElementById('name-modal');
         if (modal) modal.classList.add('hidden');
@@ -1010,10 +1026,14 @@ export class GameEngine {
             const wasDown = this.keys[e.code];
             this.keys[e.code] = true;
 
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'MENU') this.restart();
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RUNNING' && !wasDown) this.player.jump();
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'MENU') { this.audio.playMenuSelect(); this.restart(); }
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RUNNING' && !wasDown) {
+                const wasGrounded = this.player.grounded;
+                this.player.jump();
+                if (wasGrounded) this.audio.playJump(); else this.audio.playDoubleJump();
+            }
             if (e.code === 'ArrowDown' && this.state === 'RUNNING') this.player.duck();
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RANKING') this.restart();
+            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RANKING') { this.audio.playMenuSelect(); this.restart(); }
             e.preventDefault();
         });
         window.addEventListener('keyup', (e) => {
@@ -1044,9 +1064,9 @@ export class GameEngine {
                 const cy = (e.touches[0].clientY - rect.top) / sy;
 
                 const inZone = (z) => cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h;
-                if (inZone(zones.jump)) { this.player.jump(); }
+                if (inZone(zones.jump)) { const wg = this.player.grounded; this.player.jump(); if (wg) this.audio.playJump(); else this.audio.playDoubleJump(); }
                 else if (inZone(zones.duck)) { this.player.duck(); isDucking = true; }
-                else { this.player.jump(); } // tap anywhere else = jump
+                else { const wg = this.player.grounded; this.player.jump(); if (wg) this.audio.playJump(); else this.audio.playDoubleJump(); }
             }
             e.preventDefault();
         }, { passive: false });

@@ -76,7 +76,10 @@ export class UIManager {
 
     checkStreakMilestone(streak) {
         const msg = MILESTONE_MSGS[streak];
-        if (msg) this.showPopup(msg.text, msg.color);
+        if (msg) {
+            this.showPopup(msg.text, msg.color);
+            this.engine?.audio?.playStreak();
+        }
     }
 
     update(dt) {
