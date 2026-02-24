@@ -319,8 +319,8 @@ body.embed-mode #lb-panel {
 
 #audio-panel {
   position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
+  bottom: 46px;
+  right: 10px;
   background: rgba(8, 12, 4, 0.97);
   border: 1.5px solid #2d4012;
   border-radius: 8px;

@@ -160,6 +160,22 @@ export class UIManager {
         // if (IS_TOUCH) {
         //     this._drawMobileButtons(ctx, e.W, e.H);
         // }
+
+        // ── HUD action buttons: ⏸ PAUSE and 🎵 SOUND (bottom-right of canvas) ──
+        const bH = 26, bY = e.H - bH - 8;
+        const isPaused = e.state === 'PAUSED';
+        const audioMuted = e.audio?.isMuted?.() ?? false;
+
+        // SOUND button
+        this._drawWalletButton(ctx, W - 90, bY, 82, bH,
+            audioMuted ? '🔇 SOUND' : '🎵 SOUND',
+            '#1a2f0a', '#8b9a6b');
+
+        // PAUSE / RESUME button
+        this._drawWalletButton(ctx, W - 182, bY, 82, bH,
+            isPaused ? '▶ RESUME' : '⏸ PAUSE',
+            isPaused ? '#2e0808' : '#1a2f0a',
+            isPaused ? '#e87070' : '#8b9a6b');
     }
 
     /** On-screen jump + duck buttons for mobile */

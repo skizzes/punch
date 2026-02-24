@@ -1087,6 +1087,30 @@ export class GameEngine {
             this.keys[e.code] = false;
             if (e.code === 'ArrowDown' && this.state === 'RUNNING') this.player._unduck();
         });
+
+        // ── HUD button clicks (PAUSE / SOUND) on canvas ──
+        this.canvas.addEventListener('click', (ev) => {
+            if (this.state !== 'RUNNING' && this.state !== 'PAUSED') return;
+            const rect = this.canvas.getBoundingClientRect();
+            const scaleX = this.canvas.clientWidth / this.W;
+            const scaleY = this.canvas.clientHeight / this.H;
+            const cx = (ev.clientX - rect.left) / scaleX;
+            const cy = (ev.clientY - rect.top) / scaleY;
+
+            const bH = 26, bY = this.H - bH - 8;
+            const hit = (x, w) => cx >= x && cx <= x + w && cy >= bY && cy <= bY + bH;
+
+            if (hit(this.W - 182, 82)) {
+                // PAUSE / RESUME button
+                this.togglePause();
+                ev.stopPropagation();
+            } else if (hit(this.W - 90, 82)) {
+                // SOUND button — toggle audio panel
+                const panel = document.getElementById('audio-panel');
+                if (panel) panel.classList.toggle('hidden');
+                ev.stopPropagation();
+            }
+        });
     }
 
     _setupTouch() {

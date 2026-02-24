@@ -21,31 +21,21 @@
   <div id="game-wrapper">
     <canvas id="gameCanvas" tabindex="0"></canvas>
 
-    <!-- HUD toolbar: pause + audio — bottom of canvas -->
-    <div id="game-toolbar">
-      <button id="pause-btn" class="hud-btn hidden" title="Pause (P)">
-        <span class="hud-btn-icon">⏸</span>
-        <span class="hud-btn-label">PAUSE</span>
-      </button>
-      <button id="audio-btn" class="hud-btn" title="Sound Settings">
-        <span class="hud-btn-icon">🎵</span>
-        <span class="hud-btn-label">SOUND</span>
-      </button>
-      <div id="audio-panel" class="hidden">
-        <div class="audio-panel-title">🎵 SOUND SETTINGS</div>
-        <div class="audio-row">
-          <label>🎶 Music</label>
-          <input type="range" id="music-vol" min="0" max="100" value="35" />
-          <span id="music-vol-val">35%</span>
-        </div>
-        <div class="audio-row">
-          <label>💥 SFX</label>
-          <input type="range" id="sfx-vol" min="0" max="100" value="55" />
-          <span id="sfx-vol-val">55%</span>
-        </div>
-        <div class="audio-row">
-          <button id="mute-btn">🔇 MUTE ALL</button>
-        </div>
+    <!-- Audio panel overlay (opened by clicking canvas SOUND button) -->
+    <div id="audio-panel" class="hidden">
+      <div class="audio-panel-title">🎵 SOUND SETTINGS</div>
+      <div class="audio-row">
+        <label>🎶 Music</label>
+        <input type="range" id="music-vol" min="0" max="100" value="35" />
+        <span id="music-vol-val">35%</span>
+      </div>
+      <div class="audio-row">
+        <label>💥 SFX</label>
+        <input type="range" id="sfx-vol" min="0" max="100" value="55" />
+        <span id="sfx-vol-val">55%</span>
+      </div>
+      <div class="audio-row">
+        <button id="mute-btn">🔇 MUTE ALL</button>
       </div>
     </div>
   </div>
