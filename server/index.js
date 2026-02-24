@@ -37,10 +37,15 @@ function sbHeaders() {
 async function getTopScores(limit = 25) {
     if (!SUPABASE_URL) return [];
     const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/scores?order=score.desc&limit=${limit}`,
+        `${SUPABASE_URL}/rest/v1/scores?select=*&order=score.desc&limit=${limit}`,
         { headers: sbHeaders() }
     );
-    return res.ok ? await res.json() : [];
+    if (!res.ok) {
+        const err = await res.text();
+        console.error('Supabase getTopScores error:', res.status, err);
+        return [];
+    }
+    return await res.json();
 }
 
 async function insertScore(entry) {
@@ -95,10 +100,17 @@ app.post('/api/score', async (req, res) => {
             streak: Math.floor(Number(streak) || 0),
         };
 
+        console.log('Inserting score:', JSON.stringify(entry));
         const inserted = await insertScore(entry);
-        const rank = inserted ? await getRank(inserted.id) : null;
+        if (!inserted) {
+            console.error('insertScore returned null — check Supabase RLS or schema');
+            return res.status(500).json({ ok: false, error: 'Failed to save score to database' });
+        }
+        const rank = await getRank(inserted.id);
+        console.log('Score inserted id=%s rank=%s', inserted.id, rank);
         res.json({ ok: true, rank });
     } catch (e) {
+        console.error('POST /api/score exception:', e.message);
         res.status(500).json({ error: e.message });
     }
 });
