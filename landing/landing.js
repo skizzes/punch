@@ -1,6 +1,6 @@
 // landing.js – Punch in the Trenches landing page logic
 
-const SERVER = 'https://punch-glbl.onrender.com';
+const SERVER = 'https://punch-leaderboard.onrender.com';
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
