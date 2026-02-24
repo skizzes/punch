@@ -19,7 +19,7 @@ html,
 body {
   width: 100%;
   height: 100%;
-  background: var(--bg);
+  background: #0a0a0a;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -31,6 +31,7 @@ body {
 
 /* ── Canvas wrapper ─────────────────────────────────────────────────────── */
 #game-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,12 +42,10 @@ body {
 #gameCanvas {
   display: block;
   background: #87CEEB;
-  border: 3px solid #3d7022;
-  border-radius: 6px;
-  box-shadow: 0 6px 32px rgba(61, 112, 34, 0.25), 0 2px 8px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   image-rendering: pixelated;
-  max-width: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
 }
 
 /* ── Leaderboard panel ───────────────────────────────────────────────────── */
@@ -243,6 +242,40 @@ body.embed-mode #lb-panel {
 /* ── Scrollbar hide ──────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Pause button ────────────────────────────────────────────────────────── */
+#pause-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(26, 35, 16, 0.80);
+  border: 1.5px solid #556b2f;
+  color: #c8d8a0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  transition: background 0.2s, transform 0.15s;
+  user-select: none;
+  line-height: 1;
+}
+
+#pause-btn:hover {
+  background: rgba(59, 74, 31, 0.95);
+  transform: scale(1.1);
+}
+
+#pause-btn.paused {
+  background: rgba(55, 20, 20, 0.90);
+  border-color: #ef4444;
+  color: #ef4444;
+  content: '▶';
 }
 
 /* ── Audio controls ──────────────────────────────────────────────────────── */

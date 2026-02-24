@@ -12,6 +12,37 @@ window.addEventListener('DOMContentLoaded', () => {
     const engine = new GameEngine({ embedMode, gameUrl: GAME_URL });
     engine.start();
 
+    // ── Pause button ─────────────────────────────────────────────────────────
+    const pauseBtn = document.getElementById('pause-btn');
+
+    // Show pause button only during RUNNING/PAUSED states
+    const updatePauseBtn = () => {
+        const state = engine.state;
+        const visible = state === 'RUNNING' || state === 'PAUSED';
+        pauseBtn.classList.toggle('hidden', !visible);
+        pauseBtn.textContent = state === 'PAUSED' ? '▶' : '⏸';
+        pauseBtn.classList.toggle('paused', state === 'PAUSED');
+        pauseBtn.title = state === 'PAUSED' ? 'Resume (P)' : 'Pause (P)';
+    };
+
+    pauseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        engine.togglePause();
+        updatePauseBtn();
+    });
+
+    // Patch togglePause to also update the button
+    const _origToggle = engine.togglePause.bind(engine);
+    engine.togglePause = () => { _origToggle(); updatePauseBtn(); };
+
+    // Patch restart to update the button
+    const _origRestart = engine.restart.bind(engine);
+    engine.restart = () => { _origRestart(); updatePauseBtn(); };
+
+    // Poll every frame for state changes from keyboard
+    const syncPauseBtn = () => { updatePauseBtn(); requestAnimationFrame(syncPauseBtn); };
+    requestAnimationFrame(syncPauseBtn);
+
     // ── Audio panel controls ─────────────────────────────────────────────────
     const audioBtn = document.getElementById('audio-btn');
     const audioPanel = document.getElementById('audio-panel');

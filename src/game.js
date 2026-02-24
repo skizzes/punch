@@ -114,7 +114,7 @@ export class GameEngine {
         const loop = (ts) => {
             const dt = Math.min((ts - last) / 1000, 0.05);
             last = ts;
-            this.time += dt;
+            if (this.state !== 'PAUSED') this.time += dt;
             this._update(dt);
             this._draw();
             requestAnimationFrame(loop);
@@ -122,8 +122,22 @@ export class GameEngine {
         requestAnimationFrame((ts) => { last = ts; requestAnimationFrame(loop); });
     }
 
+    togglePause() {
+        if (this.state === 'RUNNING') {
+            this.state = 'PAUSED';
+            this.audio.pauseMusic();
+        } else if (this.state === 'PAUSED') {
+            this.state = 'RUNNING';
+            this.audio.resumeMusic();
+        }
+    }
+
     // ─── Update ───────────────────────────────────────────────────────────────
     _update(dt) {
+        if (this.state === 'PAUSED') {
+            this.ui.update(dt * 0); // keep popups frozen
+            return;
+        }
         if (this.state === 'RUNNING') {
             // Speed curve: steep ramp in first 10s, then steady climb to 850
             const ramp = this.survivalTime < 10 ? 7 : 4.5;
@@ -360,6 +374,38 @@ export class GameEngine {
         if (this.state === 'MENU') this.ui.drawMenu(ctx, this.time);
         if (this.state === 'GAMEOVER') this.ui.drawGameOver(ctx, this._gameOverData, this.gameUrl);
         if (this.state === 'RANKING') this.ui.drawRanking(ctx, this._gameOverData);
+
+        // Pause overlay (drawn on top of game scene)
+        if (this.state === 'PAUSED') {
+            this.ui.drawHUD(ctx);
+            this.ui.drawPopups(ctx);
+            this._drawPauseOverlay(ctx, W, H);
+        }
+    }
+
+    _drawPauseOverlay(ctx, W, H) {
+        // Dim the scene
+        ctx.save();
+        ctx.fillStyle = 'rgba(8, 14, 4, 0.72)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Panel
+        const pw = 240, ph = 110;
+        const px = W / 2 - pw / 2, py = H / 2 - ph / 2;
+        ctx.fillStyle = '#1a2310';
+        ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 10); ctx.fill();
+        ctx.strokeStyle = '#3b4a1f'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 10); ctx.stroke();
+
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffd700'; ctx.font = 'bold 24px monospace';
+        ctx.fillText('⏸  PAUSED', W / 2, py + 34);
+
+        ctx.fillStyle = '#556b2f'; ctx.font = '10px monospace';
+        ctx.fillText('Press  P / ESC  to resume', W / 2, py + 60);
+        ctx.fillText('Score: $' + Math.floor(this.score).toLocaleString() + '  ·  Time: ' + Math.floor(this.survivalTime) + 's', W / 2, py + 80);
+
+        ctx.restore();
     }
 
     // ── Scenery system: changes every 1000 pts ──────────────────────────────
@@ -1032,6 +1078,7 @@ export class GameEngine {
                 this.player.jump();
                 if (wasGrounded) this.audio.playJump(); else this.audio.playDoubleJump();
             }
+            if ((e.code === 'KeyP' || e.code === 'Escape') && (this.state === 'RUNNING' || this.state === 'PAUSED')) this.togglePause();
             if (e.code === 'ArrowDown' && this.state === 'RUNNING') this.player.duck();
             if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === 'RANKING') { this.audio.playMenuSelect(); this.restart(); }
             e.preventDefault();
