@@ -76,6 +76,7 @@ async function connectWallet() {
 
 document.getElementById('walletBtn')?.addEventListener('click', connectWallet);
 document.getElementById('walletBtnLg')?.addEventListener('click', connectWallet);
+document.getElementById('walletBtnNav')?.addEventListener('click', connectWallet);
 
 // ── Particle System ───────────────────────────────────────────────────────────
 function createParticles() {
