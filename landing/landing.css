@@ -1098,7 +1098,6 @@ kbd {
 
 @media (max-width: 1024px) {
 
-    .lore-container,
     .htp-grid-premium,
     .tier-grid-premium {
         flex-direction: column;
@@ -1110,16 +1109,16 @@ kbd {
         grid-column: 1 / -1;
     }
 
-    .lore-image {
-        order: 2;
-    }
-
     .lore-text {
         text-align: center;
     }
 }
 
 @media (max-width: 768px) {
+    .lore-container {
+        flex-direction: column;
+    }
+
     .nav {
         padding: 0 20px;
     }
